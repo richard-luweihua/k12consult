@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, getAdminSessionCookieOptions } from "../../../../lib/admin-auth.js";
+import { appPath } from "../../../../lib/paths.js";
 import { getUserSessionCookieOptions, USER_SESSION_COOKIE } from "../../../../lib/user-auth.js";
 
 export async function POST(request) {
-  const response = NextResponse.redirect(new URL("/advisor/login?logged_out=1", request.url), { status: 303 });
+  const response = NextResponse.redirect(new URL(appPath("/advisor/login?logged_out=1"), request.url), { status: 303 });
   response.cookies.set(ADMIN_SESSION_COOKIE, "", {
     ...getAdminSessionCookieOptions(),
     maxAge: 0

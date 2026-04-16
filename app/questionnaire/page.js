@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { appPath } from "@/lib/paths";
 import { QuestionnaireForm } from "../../components/QuestionnaireForm";
 
 export default function QuestionnairePage() {
@@ -12,7 +13,7 @@ export default function QuestionnairePage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push(appPath('/login'));
     }
   }, [user, loading, router]);
 

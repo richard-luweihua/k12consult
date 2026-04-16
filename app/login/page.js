@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { appPath } from '@/lib/paths';
 import { isPlaceholderConfig } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -26,7 +27,7 @@ export default function LoginPage() {
     if (isDemoMode) {
       // 演示模式：模拟登录成功
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push(appPath('/dashboard'));
       }, 1000);
       return;
     }
@@ -35,11 +36,11 @@ export default function LoginPage() {
       if (isSignUp) {
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
-        router.push('/dashboard');
+        router.push(appPath('/dashboard'));
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        router.push('/dashboard');
+        router.push(appPath('/dashboard'));
       }
     } catch (error) {
       setError(error.message);
@@ -50,7 +51,7 @@ export default function LoginPage() {
 
   const handleSkipAuth = () => {
     // 跳过认证，直接进入应用
-    router.push('/dashboard');
+    router.push(appPath('/dashboard'));
   };
 
   return (

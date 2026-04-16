@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { apiPath } from "@/lib/paths";
 import { usePermissions } from "@/lib/permissions";
 
 function scoreLabel(score) {
@@ -23,7 +24,7 @@ export default function ResultPage() {
       if (!params?.submissionId) return;
 
       try {
-        const response = await fetch(`/api/results/${params.submissionId}`, {
+        const response = await fetch(apiPath(`/api/results/${params.submissionId}`), {
           cache: "no-store"
         });
 

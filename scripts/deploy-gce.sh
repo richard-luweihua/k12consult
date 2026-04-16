@@ -22,6 +22,7 @@ BRANCH="${BRANCH:-main}"
 DEPLOY_PATH="${DEPLOY_PATH:-/var/www/k12consult}"
 APP_NAME="${APP_NAME:-k12consult}"
 APP_PORT="${APP_PORT:-3000}"
+APP_BASE_PATH="${NEXT_PUBLIC_BASE_PATH:-}"
 
 required_vars=(DEPLOY_HOST DEPLOY_USER REPO_URL NEXT_PUBLIC_SITE_URL)
 for name in "${required_vars[@]}"; do
@@ -59,6 +60,7 @@ append_env() {
 }
 
 append_env "NEXT_PUBLIC_SITE_URL" "${NEXT_PUBLIC_SITE_URL:-}"
+append_env "NEXT_PUBLIC_BASE_PATH" "${NEXT_PUBLIC_BASE_PATH:-}"
 append_env "NEXT_PUBLIC_SUPABASE_URL" "${NEXT_PUBLIC_SUPABASE_URL:-}"
 append_env "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" "${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}"
 append_env "NEXT_PUBLIC_SUPABASE_ANON_KEY" "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}"
@@ -110,9 +112,14 @@ printf "\n==> 安装依赖、构建并重启服务\n"
 
   pm2 save
 
+  HEALTH_PATH='$APP_BASE_PATH'
+  if [ -z "\$HEALTH_PATH" ]; then
+    HEALTH_PATH="/"
+  fi
+
   for attempt in \$(seq 1 30); do
-    if curl -fsI 'http://127.0.0.1:$APP_PORT' >/dev/null; then
-      curl -I 'http://127.0.0.1:$APP_PORT'
+    if curl -fsI "http://127.0.0.1:$APP_PORT\$HEALTH_PATH" >/dev/null; then
+      curl -I "http://127.0.0.1:$APP_PORT\$HEALTH_PATH"
       exit 0
     fi
 

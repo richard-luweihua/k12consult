@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiPath } from "@/lib/paths";
 
 const statuses = ["待派单", "已派单", "顾问已接收", "跟进中", "已转化", "暂不跟进", "回流公海"];
 
@@ -16,7 +17,7 @@ export function LeadWorkbench({ lead, consultants }) {
     setMessage("");
 
     try {
-      const response = await fetch(`/api/leads/${lead.id}`, {
+      const response = await fetch(apiPath(`/api/leads/${lead.id}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"

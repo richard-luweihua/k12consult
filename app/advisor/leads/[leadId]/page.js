@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LeadWorkbench } from "../../../../components/LeadWorkbench";
 import { getLead } from "../../../../lib/data";
 import { formatAnswerSummary } from "../../../../lib/intake";
+import { apiPath } from "../../../../lib/paths";
 
 export default async function AdvisorLeadDetailPage({ params }) {
   const resolvedParams = await params;
@@ -20,7 +21,7 @@ export default async function AdvisorLeadDetailPage({ params }) {
         <Link className="topbar-link" href="/advisor">← 返回线索库</Link>
         <div className="page-topbar-actions">
           <Link className="topbar-link" href={`/result/${lead.id}`}>查看用户结果页</Link>
-          <form action="/api/advisor/logout" method="post" className="logout-form">
+          <form action={apiPath("/api/advisor/logout")} method="post" className="logout-form">
             <button className="secondary-button" type="submit">
               退出登录
             </button>

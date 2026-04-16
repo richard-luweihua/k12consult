@@ -2,6 +2,7 @@ import Link from "next/link";
 import { WeComTester } from "../../components/WeComTester";
 import { listLeads } from "../../lib/data";
 import { diagnoseWeCom } from "../../lib/notifications";
+import { apiPath } from "../../lib/paths";
 import { diagnoseSupabase } from "../../lib/supabase";
 import { buildLeadStats } from "../../lib/tracking";
 
@@ -33,7 +34,7 @@ export default async function AdvisorPage() {
             <Link className="secondary-button" href="/">
               返回用户端
             </Link>
-            <form action="/api/advisor/logout" method="post">
+            <form action={apiPath("/api/advisor/logout")} method="post">
               <button className="secondary-button" type="submit">
                 退出登录
               </button>

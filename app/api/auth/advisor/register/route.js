@@ -7,6 +7,7 @@ import {
   hasUserAuthConfig,
   USER_SESSION_COOKIE
 } from "../../../../../lib/user-auth.js";
+import { appPath } from "../../../../../lib/paths.js";
 import { registerUser } from "../../../../../lib/user-service.js";
 
 export async function POST(request) {
@@ -18,19 +19,19 @@ export async function POST(request) {
   const consultantId = String(formData.get("consultantId") || "").trim();
 
   if (!hasUserAuthConfig()) {
-    return NextResponse.redirect(new URL("/advisor/register?error=config", request.url), { status: 303 });
+    return NextResponse.redirect(new URL(appPath("/advisor/register?error=config"), request.url), { status: 303 });
   }
 
   if (!hasAdvisorInviteConfig()) {
-    return NextResponse.redirect(new URL("/advisor/register?error=invite_missing", request.url), { status: 303 });
+    return NextResponse.redirect(new URL(appPath("/advisor/register?error=invite_missing"), request.url), { status: 303 });
   }
 
   if (!fullName || !email || !password || !consultantId) {
-    return NextResponse.redirect(new URL("/advisor/register?error=incomplete", request.url), { status: 303 });
+    return NextResponse.redirect(new URL(appPath("/advisor/register?error=incomplete"), request.url), { status: 303 });
   }
 
   if (inviteCode !== getAdvisorInviteCode()) {
-    return NextResponse.redirect(new URL("/advisor/register?error=invite", request.url), { status: 303 });
+    return NextResponse.redirect(new URL(appPath("/advisor/register?error=invite"), request.url), { status: 303 });
   }
 
   try {
@@ -41,10 +42,10 @@ export async function POST(request) {
       role: "consultant",
       consultantId
     });
-    const response = NextResponse.redirect(new URL("/advisor", request.url), { status: 303 });
+    const response = NextResponse.redirect(new URL(appPath("/advisor"), request.url), { status: 303 });
     response.cookies.set(USER_SESSION_COOKIE, await createUserSessionToken(user), getUserSessionCookieOptions());
     return response;
   } catch {
-    return NextResponse.redirect(new URL("/advisor/register?error=register", request.url), { status: 303 });
+    return NextResponse.redirect(new URL(appPath("/advisor/register?error=register"), request.url), { status: 303 });
   }
 }

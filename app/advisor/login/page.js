@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, hasAdminAuthConfig, verifyAdminSessionToken } from "../../../lib/admin-auth";
+import { apiPath, appPath } from "../../../lib/paths";
 import { USER_SESSION_COOKIE, verifyUserSessionToken } from "../../../lib/user-auth";
 
 function canAccessAdvisor(session) {
@@ -22,7 +23,7 @@ export default async function AdvisorLoginPage({ searchParams }) {
   ]);
 
   if (adminAuthenticated || canAccessAdvisor(userSession)) {
-    redirect("/advisor");
+    redirect(appPath("/advisor"));
   }
 
   const params = await searchParams;
@@ -47,7 +48,7 @@ export default async function AdvisorLoginPage({ searchParams }) {
           <span>WeCom</span>
         </div>
 
-        <form action="/api/auth/advisor/login" className="auth-form" method="post">
+        <form action={apiPath("/api/auth/advisor/login")} className="auth-form" method="post">
           <input name="next" type="hidden" value={next} />
           <label className="field-block">
             <span className="field-label">顾问邮箱</span>
@@ -76,7 +77,7 @@ export default async function AdvisorLoginPage({ searchParams }) {
         {hasAdminAuthConfig() ? (
           <div className="auth-divider-block">
             <p className="eyebrow">Legacy Admin Access</p>
-            <form action="/api/admin/login" className="auth-form" method="post">
+            <form action={apiPath("/api/admin/login")} className="auth-form" method="post">
               <input name="next" type="hidden" value={next} />
               <label className="field-block">
                 <span className="field-label">管理员密码</span>

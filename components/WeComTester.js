@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiPath } from "@/lib/paths";
 
 export function WeComTester() {
   const [sending, setSending] = useState("");
@@ -11,7 +12,7 @@ export function WeComTester() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/notifications/test", {
+      const response = await fetch(apiPath("/api/notifications/test"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

@@ -5,6 +5,7 @@ import { usePermissions } from '@/lib/permissions';
 import { isPlaceholderConfig } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { apiPath } from '@/lib/paths';
 
 function getStatusMeta(status) {
   const labelMap = {
@@ -73,7 +74,7 @@ export default function MyLeadsPage() {
         return;
       }
 
-      const response = await fetch('/api/my-leads', {
+      const response = await fetch(apiPath('/api/my-leads'), {
         credentials: 'include',
         cache: 'no-store'
       });

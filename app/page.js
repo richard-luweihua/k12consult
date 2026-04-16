@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { appPath } from "@/lib/paths";
 import { AttributionLink } from "../components/AttributionLink";
 
 const capabilities = [
@@ -58,7 +59,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      router.push(appPath('/dashboard'));
     }
   }, [user, loading, router]);
 

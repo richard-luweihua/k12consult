@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, hasAdminAuthConfig, verifyAdminSessionToken } from "../../../lib/admin-auth";
 import { defaultConsultants } from "../../../lib/consultants";
+import { apiPath, appPath } from "../../../lib/paths";
 import { USER_SESSION_COOKIE, hasAdvisorInviteConfig, verifyUserSessionToken } from "../../../lib/user-auth";
 
 function canAccessAdvisor(session) {
@@ -23,7 +24,7 @@ export default async function AdvisorRegisterPage({ searchParams }) {
   ]);
 
   if (adminAuthenticated || canAccessAdvisor(userSession)) {
-    redirect("/advisor");
+    redirect(appPath("/advisor"));
   }
 
   const params = await searchParams;
@@ -40,7 +41,7 @@ export default async function AdvisorRegisterPage({ searchParams }) {
         <p className="hero-text">收到邀请码后，顾问可以在这里完成一次性注册。注册成功后，后续直接用邮箱密码登录 `/advisor`。</p>
         <p className="inline-message">注册时请选择你在系统里的顾问席位，这会决定你登录后看到哪一组分配线索。</p>
 
-        <form action="/api/auth/advisor/register" className="auth-form" method="post">
+        <form action={apiPath("/api/auth/advisor/register")} className="auth-form" method="post">
           <label className="field-block">
             <span className="field-label">顾问姓名</span>
             <input className="text-input" name="fullName" placeholder="例如：Ryan 林老师" required type="text" />

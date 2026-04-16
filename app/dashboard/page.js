@@ -5,6 +5,7 @@ import { usePermissions } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { appPath } from '@/lib/paths';
 
 export default function DashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -13,7 +14,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login');
+      router.push(appPath('/login'));
     }
   }, [user, authLoading, router]);
 
@@ -31,7 +32,7 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/login');
+    router.push(appPath('/login'));
   };
 
   return (

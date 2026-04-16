@@ -1,11 +1,21 @@
 /** @type {import('next').NextConfig} */
+const normalizedBasePath = (() => {
+  const raw = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
+  if (!raw || raw === "/") {
+    return "";
+  }
+
+  return (raw.startsWith("/") ? raw : `/${raw}`).replace(/\/+$/, "");
+})();
+
 const nextConfig = {
-  // 如需部署到二级路径，取消注释以下行并设置正确的路径
-  // basePath: '/k12consult',
+  ...(normalizedBasePath ? { basePath: normalizedBasePath } : {}),
   
   // 优化环境
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_BASE_PATH: normalizedBasePath,
   },
 
   // 图片优化

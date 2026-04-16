@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { apiPath, appPath } from "@/lib/paths";
 import { formSections, requiredFieldNames } from "../lib/schema";
 
 const initialState = formSections.flatMap((section) => section.fields).reduce((acc, field) => {
@@ -39,7 +40,7 @@ export function QuestionnaireForm() {
     // 检查用户是否已登录
     if (!user) {
       setError("请先登录后再提交问卷。");
-      router.push('/login');
+      router.push(appPath("/login"));
       return;
     }
 
@@ -53,7 +54,7 @@ export function QuestionnaireForm() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("/api/intake", {
+      const response = await fetch(apiPath("/api/intake"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -78,7 +79,7 @@ export function QuestionnaireForm() {
       }
 
       const data = await response.json();
-      router.push(`/result/${data.submissionId}`);
+      router.push(appPath(`/result/${data.submissionId}`));
     } catch {
       setError("系统暂时没接住这次提交，请稍后再试。");
       setSubmitting(false);
