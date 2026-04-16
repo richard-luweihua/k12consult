@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, hasAdminAuthConfig, verifyAdminSessionToken } from "./lib/admin-auth";
-import { appPath, stripBasePath } from "./lib/paths";
+import { absoluteAppUrl, stripBasePath } from "./lib/paths";
 import { USER_SESSION_COOKIE, verifyUserSessionToken } from "./lib/user-auth";
 
 function isProtectedApi(pathname) {
@@ -17,7 +17,7 @@ export async function middleware(request) {
 
   if (pathname.startsWith("/admin")) {
     const advisorPath = pathname.replace(/^\/admin/, "/advisor") || "/advisor";
-    const url = new URL(appPath(`${advisorPath}${search}`), request.url);
+    const url = absoluteAppUrl(`${advisorPath}${search}`, request.url);
     return NextResponse.redirect(url);
   }
 
@@ -31,7 +31,7 @@ export async function middleware(request) {
 
   if (pathname === "/advisor/login" || pathname === "/advisor/register") {
     if (advisorAuthenticated) {
-      return NextResponse.redirect(new URL(appPath("/advisor"), request.url));
+      return NextResponse.redirect(absoluteAppUrl("/advisor", request.url));
     }
 
     return NextResponse.next();
@@ -51,7 +51,7 @@ export async function middleware(request) {
     );
   }
 
-  const loginUrl = new URL(appPath("/advisor/login"), request.url);
+  const loginUrl = absoluteAppUrl("/advisor/login", request.url);
 
   if (pathname !== "/advisor") {
     loginUrl.searchParams.set("next", `${pathname}${search}`);
