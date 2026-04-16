@@ -5,28 +5,40 @@
       "name": "Ava 陈老师",
       "title": "标准顾问",
       "focusLabel": "低龄插班 / 本地学校",
-      "specialties": ["local", "conversion"]
+      "specialties": [
+        "local",
+        "conversion"
+      ]
     },
     {
       "id": "consultant-ryan",
       "name": "Ryan 林老师",
       "title": "高级顾问",
       "focusLabel": "国际学校 / 英语规划",
-      "specialties": ["international", "conversion"]
+      "specialties": [
+        "international",
+        "conversion"
+      ]
     },
     {
       "id": "consultant-michelle",
       "name": "Michelle 黄老师",
       "title": "特殊案例顾问",
       "focusLabel": "身份复杂 / 预算规划",
-      "specialties": ["complex", "conversion"]
+      "specialties": [
+        "complex",
+        "conversion"
+      ]
     },
     {
       "id": "consultant-zoe",
       "name": "Zoe 周老师",
       "title": "转化型顾问",
       "focusLabel": "高意向首咨 / 跟进转化",
-      "specialties": ["conversion", "local"]
+      "specialties": [
+        "conversion",
+        "local"
+      ]
     }
   ],
   "leads": []

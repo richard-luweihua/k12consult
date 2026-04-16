@@ -1,4 +1,9 @@
+.DS_Store
 node_modules
 .next
 .env.local
 npm-debug.log*
+.vercel
+.env*.local
+.deploy/*.env
+.deploy/*.local

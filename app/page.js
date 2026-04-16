@@ -1,5 +1,9 @@
+'use client';
+
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { AttributionLink } from "../components/AttributionLink";
 
 const capabilities = [
@@ -49,6 +53,23 @@ const deliverables = [
 ];
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">加载中...</div>
+      </div>
+    );
+  }
+
   return (
     <main className="page-shell home-shell">
       <section className="hero hero--executive">

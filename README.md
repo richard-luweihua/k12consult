@@ -55,6 +55,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 WECOM_WEBHOOK_URL=
 WECOM_HIGH_PRIORITY_WEBHOOK_URL=
 ADMIN_ACCESS_PASSWORD=
+ADVISOR_INVITE_CODE=
 ```
 
 说明：
@@ -68,6 +69,7 @@ ADMIN_ACCESS_PASSWORD=
 - 没填企微 webhook 时，通知逻辑会自动跳过
 - `WECOM_WEBHOOK_URL` 建议必填，`WECOM_HIGH_PRIORITY_WEBHOOK_URL` 可选，用于高优先级线索分流提醒
 - 填了 `ADMIN_ACCESS_PASSWORD` 后，`/advisor`、线索详情页和管理端接口会启用登录保护
+- `ADVISOR_INVITE_CODE` 用于顾问首次注册；如果不填，会默认回退使用 `ADMIN_ACCESS_PASSWORD`
 
 ## Supabase 初始化
 

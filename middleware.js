@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, hasAdminAuthConfig, verifyAdminSessionToken } from "./lib/admin-auth";
+import { USER_SESSION_COOKIE, verifyUserSessionToken } from "./lib/user-auth";
 
 function isProtectedApi(pathname) {
   return pathname.startsWith("/api/leads/") || pathname.startsWith("/api/notifications/");
+}
+
+function canAccessAdvisorWorkspace(session) {
+  return Boolean(session && ["consultant", "admin"].includes(session.role));
 }
 
 export async function middleware(request) {
@@ -14,22 +19,23 @@ export async function middleware(request) {
     return NextResponse.redirect(url);
   }
 
-  if (!hasAdminAuthConfig()) {
-    return NextResponse.next();
-  }
+  const adminToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const userToken = request.cookies.get(USER_SESSION_COOKIE)?.value;
+  const [authenticated, userSession] = await Promise.all([
+    hasAdminAuthConfig() ? verifyAdminSessionToken(adminToken) : Promise.resolve(false),
+    verifyUserSessionToken(userToken)
+  ]);
+  const advisorAuthenticated = authenticated || canAccessAdvisorWorkspace(userSession);
 
-  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  const authenticated = await verifyAdminSessionToken(token);
-
-  if (pathname === "/advisor/login") {
-    if (authenticated) {
+  if (pathname === "/advisor/login" || pathname === "/advisor/register") {
+    if (advisorAuthenticated) {
       return NextResponse.redirect(new URL("/advisor", request.url));
     }
 
     return NextResponse.next();
   }
 
-  if (authenticated) {
+  if (advisorAuthenticated) {
     return NextResponse.next();
   }
 

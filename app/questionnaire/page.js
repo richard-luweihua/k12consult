@@ -1,16 +1,37 @@
+'use client';
+
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { QuestionnaireForm } from "../../components/QuestionnaireForm";
 
-export const metadata = {
-  title: "前诊问卷 | 香港 K12 择校前诊 MVP"
-};
-
 export default function QuestionnairePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">加载中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <main className="page-shell">
       <div className="page-topbar">
-        <Link href="/">返回落地页</Link>
+        <Link href="/dashboard">返回仪表板</Link>
       </div>
 
       <section className="hero hero--compact">

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { WeComTester } from "../../components/WeComTester";
-import { hasAdminAuthConfig } from "../../lib/admin-auth";
 import { listLeads } from "../../lib/data";
 import { diagnoseWeCom } from "../../lib/notifications";
 import { diagnoseSupabase } from "../../lib/supabase";
@@ -16,7 +15,6 @@ export default async function AdvisorPage() {
     diagnoseSupabase(),
     diagnoseWeCom()
   ]);
-  const authEnabled = hasAdminAuthConfig();
   const stats = buildLeadStats(leads);
   const awaitingAssignment = leads.filter((lead) => lead.status === "待派单").length;
   const newlyAssigned = leads.filter((lead) => lead.status === "已派单").length;
@@ -35,13 +33,11 @@ export default async function AdvisorPage() {
             <Link className="secondary-button" href="/">
               返回用户端
             </Link>
-            {authEnabled ? (
-              <form action="/api/admin/logout" method="post">
-                <button className="secondary-button" type="submit">
-                  退出登录
-                </button>
-              </form>
-            ) : null}
+            <form action="/api/advisor/logout" method="post">
+              <button className="secondary-button" type="submit">
+                退出登录
+              </button>
+            </form>
           </div>
         </div>
 

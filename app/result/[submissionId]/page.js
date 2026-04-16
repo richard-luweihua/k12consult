@@ -1,17 +1,94 @@
+'use client';
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getLead } from "../../../lib/data";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { usePermissions } from "@/lib/permissions";
 
 function scoreLabel(score) {
   return `${score} / 5`;
 }
 
-export default async function ResultPage({ params }) {
-  const resolvedParams = await params;
-  const { lead } = await getLead(resolvedParams.submissionId);
+export default function ResultPage() {
+  const params = useParams();
+  const { user, loading: authLoading } = useAuth();
+  const { canViewOwnLeads, canViewAssignedLeads, canViewAllLeads } = usePermissions();
+  const [lead, setLead] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+
+  useEffect(() => {
+    async function fetchLead() {
+      if (!params?.submissionId) return;
+
+      try {
+        const response = await fetch(`/api/results/${params.submissionId}`, {
+          cache: "no-store"
+        });
+
+        if (response.status === 404) {
+          setLead(null);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("获取结果失败");
+        }
+
+        const { lead: leadData } = await response.json();
+        setLead(leadData);
+      } catch (error) {
+        console.error('Error fetching lead:', error);
+        setFetchError(error instanceof Error ? error.message : "获取结果失败");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (!authLoading) {
+      fetchLead();
+    }
+  }, [params?.submissionId, authLoading]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">加载中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-red-600">请先登录</div>
+      </div>
+    );
+  }
 
   if (!lead) {
-    notFound();
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-red-600">{fetchError || "未找到对应结果"}</div>
+      </div>
+    );
+  }
+
+  // 权限检查
+  const consultantKey = user.consultant_id || user.consultantId || user.id;
+  const canView = (
+    (canViewOwnLeads && lead.userId === user.id) ||
+    canViewAllLeads ||
+    (canViewAssignedLeads && lead.assignedConsultantId === consultantKey)
+  );
+
+  if (!canView) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-red-600">无权限查看此结果</div>
+      </div>
+    );
   }
 
   const { result, answers, assignment } = lead;
@@ -19,7 +96,7 @@ export default async function ResultPage({ params }) {
   return (
     <main className="page-shell">
       <div className="page-topbar">
-        <Link href="/">返回落地页</Link>
+        <Link href="/dashboard">返回仪表板</Link>
         <div className="page-topbar-actions">
           <Link href="/questionnaire">重新填写</Link>
         </div>

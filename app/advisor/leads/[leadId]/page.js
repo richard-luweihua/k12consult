@@ -20,7 +20,7 @@ export default async function AdvisorLeadDetailPage({ params }) {
         <Link className="topbar-link" href="/advisor">← 返回线索库</Link>
         <div className="page-topbar-actions">
           <Link className="topbar-link" href={`/result/${lead.id}`}>查看用户结果页</Link>
-          <form action="/api/admin/logout" method="post" className="logout-form">
+          <form action="/api/advisor/logout" method="post" className="logout-form">
             <button className="secondary-button" type="submit">
               退出登录
             </button>

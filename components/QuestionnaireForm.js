@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { formSections, requiredFieldNames } from "../lib/schema";
 
 const initialState = formSections.flatMap((section) => section.fields).reduce((acc, field) => {
@@ -17,6 +18,7 @@ function isFilled(value) {
 export function QuestionnaireForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [formData, setFormData] = useState(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -33,6 +35,13 @@ export function QuestionnaireForm() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+
+    // 检查用户是否已登录
+    if (!user) {
+      setError("请先登录后再提交问卷。");
+      router.push('/login');
+      return;
+    }
 
     const missing = requiredFieldNames.filter((fieldName) => !isFilled(formData[fieldName]));
 
@@ -51,6 +60,7 @@ export function QuestionnaireForm() {
         },
         body: JSON.stringify({
           ...formData,
+          userId: user.id, // 添加用户ID
           tracking: {
             utmSource: searchParams.get("utm_source") || "",
             utmMedium: searchParams.get("utm_medium") || "",
