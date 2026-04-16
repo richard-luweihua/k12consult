@@ -109,7 +109,18 @@ printf "\n==> 安装依赖、构建并重启服务\n"
   fi
 
   pm2 save
-  curl -I 'http://127.0.0.1:$APP_PORT'
+
+  for attempt in \$(seq 1 30); do
+    if curl -fsI 'http://127.0.0.1:$APP_PORT' >/dev/null; then
+      curl -I 'http://127.0.0.1:$APP_PORT'
+      exit 0
+    fi
+
+    sleep 1
+  done
+
+  echo '应用已启动，但健康检查在 30 秒内未通过。请检查 pm2 logs $APP_NAME。' >&2
+  exit 1
 "
 
 printf "\n部署完成。\n"
