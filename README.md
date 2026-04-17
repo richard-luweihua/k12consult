@@ -42,6 +42,12 @@ npm run dev
 - 企微通知：新线索和状态更新会尝试推送到 webhook
 - 渠道统计：支持 `utm_source` / `utm_medium` / `utm_campaign` / `utm_content`
 
+## V2 资料
+
+第二版方案资料已独立归档到 [`docs/v2/README.md`](./docs/v2/README.md)。
+
+目前保留了从局域网共享目录导入的原始文档，方便继续整理为下一阶段需求、数据结构和 AI 诊断方案。
+
 ## 环境变量
 
 复制 `.env.example` 后填写：

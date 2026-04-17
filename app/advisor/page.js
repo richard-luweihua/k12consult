@@ -10,16 +10,107 @@ export const metadata = {
   title: "顾问工作台 | 香港 K12 择校前诊 MVP"
 };
 
-export default async function AdvisorPage() {
+const v2StatusLabelMap = {
+  report_viewed: "报告已查看，待咨询意向",
+  consult_intent_submitted: "已提交咨询意向",
+  admin_following: "管理员跟进中",
+  awaiting_user_info: "待补资料",
+  consult_ready_for_assignment: "可转顾问",
+  consult_assigned: "已转顾问",
+  consult_scheduled: "咨询已排期",
+  consult_completed: "咨询已完成",
+  follow_up: "咨询后跟进",
+  nurturing: "培育池",
+  closed: "已关闭"
+};
+
+const v2StatusOptions = [
+  { key: "all", label: "全部状态" },
+  { key: "report_viewed", label: "报告已查看" },
+  { key: "consult_intent_submitted", label: "咨询意向已提交" },
+  { key: "admin_following", label: "管理员跟进中" },
+  { key: "awaiting_user_info", label: "待补资料" },
+  { key: "consult_ready_for_assignment", label: "可转顾问" },
+  { key: "consult_assigned", label: "已转顾问" },
+  { key: "consult_scheduled", label: "咨询已排期" },
+  { key: "consult_completed", label: "咨询已完成" },
+  { key: "follow_up", label: "咨询后跟进" },
+  { key: "nurturing", label: "培育池" },
+  { key: "closed", label: "已关闭" }
+];
+
+function resolveV2Status(lead) {
+  const embeddedStatus = lead.caseRecord?.status || lead.adminFollowUpRecord?.status;
+
+  if (embeddedStatus) {
+    return embeddedStatus;
+  }
+
+  if (lead.status === "已关闭") {
+    return "closed";
+  }
+
+  if (lead.status === "暂不跟进") {
+    return "nurturing";
+  }
+
+  if (lead.status === "已转化") {
+    return "consult_completed";
+  }
+
+  if (lead.status === "顾问已接收") {
+    return "consult_scheduled";
+  }
+
+  if (lead.status === "跟进中") {
+    return "admin_following";
+  }
+
+  if (lead.status === "已派单") {
+    return "consult_assigned";
+  }
+
+  return "report_viewed";
+}
+
+function filterHref(statusKey) {
+  return statusKey === "all" ? "/advisor" : `/advisor?v2Status=${statusKey}`;
+}
+
+export default async function AdvisorPage({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const selectedStatus =
+    typeof resolvedSearchParams?.v2Status === "string" && resolvedSearchParams.v2Status.length > 0
+      ? resolvedSearchParams.v2Status
+      : "all";
   const [{ leads, storageMode }, supabaseStatus, wecomStatus] = await Promise.all([
     listLeads(),
     diagnoseSupabase(),
     diagnoseWeCom()
   ]);
+  const leadsWithV2Status = leads.map((lead) => ({
+    ...lead,
+    v2Status: resolveV2Status(lead)
+  }));
   const stats = buildLeadStats(leads);
-  const awaitingAssignment = leads.filter((lead) => lead.status === "待派单").length;
-  const newlyAssigned = leads.filter((lead) => lead.status === "已派单").length;
-  const inProgress = leads.filter((lead) => ["顾问已接收", "跟进中"].includes(lead.status)).length;
+  const awaitingAssignment = leadsWithV2Status.filter((lead) =>
+    ["report_viewed", "consult_intent_submitted", "admin_following", "consult_ready_for_assignment"].includes(lead.v2Status)
+  ).length;
+  const newlyAssigned = leadsWithV2Status.filter((lead) => lead.v2Status === "consult_assigned").length;
+  const inProgress = leadsWithV2Status.filter((lead) =>
+    ["consult_scheduled", "consult_completed", "follow_up"].includes(lead.v2Status)
+  ).length;
+  const v2StatusCounts = leadsWithV2Status.reduce(
+    (acc, lead) => {
+      acc.all += 1;
+      acc[lead.v2Status] = (acc[lead.v2Status] || 0) + 1;
+      return acc;
+    },
+    { all: 0 }
+  );
+  const filteredLeads =
+    selectedStatus === "all" ? leadsWithV2Status : leadsWithV2Status.filter((lead) => lead.v2Status === selectedStatus);
+  const selectedStatusLabel = v2StatusOptions.find((item) => item.key === selectedStatus)?.label || "当前筛选";
 
   return (
     <main className="page-shell home-shell">
@@ -33,6 +124,9 @@ export default async function AdvisorPage() {
           <div className="hero-actions">
             <Link className="secondary-button" href="/">
               返回用户端
+            </Link>
+            <Link className="secondary-button" href="/admin">
+              管理员跟进台
             </Link>
             <form action={apiPath("/api/advisor/logout")} method="post">
               <button className="secondary-button" type="submit">
@@ -149,15 +243,41 @@ export default async function AdvisorPage() {
       <section className="card table-card">
         <div className="table-header">
           <div>
+            <p className="eyebrow">V2 状态看板</p>
+            <h2>按状态筛选当前线索池</h2>
+          </div>
+          <span className="inline-note">当前筛选：{selectedStatusLabel}</span>
+        </div>
+        <div className="analytics-list">
+          {v2StatusOptions.map((statusOption) => {
+            const count = v2StatusCounts[statusOption.key] || 0;
+            const isActive = statusOption.key === selectedStatus;
+
+            return (
+              <div className="analytics-row" key={statusOption.key}>
+                <span>{statusOption.label}</span>
+                <span>{count} 条</span>
+                <Link className={isActive ? "primary-button" : "secondary-button"} href={filterHref(statusOption.key)}>
+                  {isActive ? "查看中" : "筛选"}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="card table-card">
+        <div className="table-header">
+          <div>
             <p className="eyebrow">Lead Queue</p>
             <h2>顾问待处理线索</h2>
           </div>
-          <span className="inline-note">已转化 {stats.summary.converted} 条</span>
+          <span className="inline-note">当前结果 {filteredLeads.length} 条，已转化 {stats.summary.converted} 条</span>
         </div>
 
-        {leads.length === 0 ? (
+        {filteredLeads.length === 0 ? (
           <div className="empty-state">
-            <p>当前还没有新线索进入系统，可以先去用户端提交一份前诊问卷。</p>
+            <p>当前筛选下还没有线索，调整状态筛选或先去用户端提交一份前诊问卷。</p>
             <Link className="primary-button" href="/questionnaire">
               去生成第一条线索
             </Link>
@@ -173,7 +293,7 @@ export default async function AdvisorPage() {
               <span>状态</span>
               <span>操作</span>
             </div>
-            {leads.map((lead) => (
+            {filteredLeads.map((lead) => (
               <div className="lead-row" key={lead.id}>
                 <span>
                   {lead.answers.contactName}
@@ -189,7 +309,10 @@ export default async function AdvisorPage() {
                   <small>{lead.utmCampaign || "未命名活动"}</small>
                 </span>
                 <span>{lead.assignment.consultantName}</span>
-                <span>{lead.status}</span>
+                <span>
+                  {v2StatusLabelMap[lead.v2Status] || lead.v2Status}
+                  <small>{lead.status}</small>
+                </span>
                 <Link className="secondary-button" href={`/advisor/leads/${lead.id}`}>
                   查看详情
                 </Link>

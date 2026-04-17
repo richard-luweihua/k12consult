@@ -8,11 +8,15 @@ import { apiPath, appPath } from "@/lib/paths";
 import { formSections, requiredFieldNames } from "../lib/schema";
 
 const initialState = formSections.flatMap((section) => section.fields).reduce((acc, field) => {
-  acc[field.name] = "";
+  acc[field.name] = field.type === "checkbox" ? [] : "";
   return acc;
 }, {});
 
 function isFilled(value) {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
   return typeof value === "string" ? value.trim().length > 0 : Boolean(value);
 }
 
@@ -33,6 +37,14 @@ export function QuestionnaireForm() {
     setFormData((current) => ({ ...current, [name]: value }));
   }
 
+  function toggleCheckboxValue(name, value) {
+    setFormData((current) => {
+      const existing = Array.isArray(current[name]) ? current[name] : [];
+      const next = existing.includes(value) ? existing.filter((item) => item !== value) : [...existing, value];
+      return { ...current, [name]: next };
+    });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -48,6 +60,11 @@ export function QuestionnaireForm() {
 
     if (missing.length > 0) {
       setError("还有必填信息未完成，请先补齐后再生成结果。");
+      return;
+    }
+
+    if (!isFilled(formData.mobile) && !isFilled(formData.wechat_id)) {
+      setError("手机号和微信号至少填写一项，才能解锁报告。");
       return;
     }
 
@@ -79,7 +96,12 @@ export function QuestionnaireForm() {
       }
 
       const data = await response.json();
-      router.push(appPath(`/result/${data.submissionId}`));
+
+      if (!data?.submissionId) {
+        throw new Error("提交成功但未返回结果ID");
+      }
+
+      router.push(appPath(`/result/${data.submissionId}/processing`));
     } catch {
       setError("系统暂时没接住这次提交，请稍后再试。");
       setSubmitting(false);
@@ -153,6 +175,25 @@ export function QuestionnaireForm() {
                       ))}
                     </div>
                   ) : null}
+
+                  {field.type === "checkbox" ? (
+                    <div className="option-grid">
+                      {field.options.map(([value, label]) => {
+                        const selected = Array.isArray(formData[field.name]) && formData[field.name].includes(value);
+
+                        return (
+                          <button
+                            className={selected ? "option-chip active" : "option-chip"}
+                            key={value}
+                            type="button"
+                            onClick={() => toggleCheckboxValue(field.name, value)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </label>
               ))}
             </div>
@@ -162,7 +203,7 @@ export function QuestionnaireForm() {
         <div className="submit-bar card">
           <div>
             <p className="eyebrow">提交后会发生什么</p>
-            <p>系统会立即生成路径初判、风险提示和下一步建议，帮助你更快进入后续沟通与判断。</p>
+            <p>系统会基于问卷先跑规则，再生成 V2 诊断草稿与风险预警，便于你快速进入下一步决策。</p>
           </div>
           <div className="submit-actions">
             {error ? <p className="error-text">{error}</p> : null}

@@ -11,15 +11,13 @@ function canAccessAdvisorWorkspace(session) {
   return Boolean(session && ["consultant", "admin"].includes(session.role));
 }
 
+function canAccessAdminWorkspace(session) {
+  return Boolean(session && session.role === "admin");
+}
+
 export async function middleware(request) {
   const { search } = request.nextUrl;
   const pathname = stripBasePath(request.nextUrl.pathname);
-
-  if (pathname.startsWith("/admin")) {
-    const advisorPath = pathname.replace(/^\/admin/, "/advisor") || "/advisor";
-    const url = absoluteAppUrl(`${advisorPath}${search}`, request.url);
-    return NextResponse.redirect(url);
-  }
 
   const adminToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   const userToken = request.cookies.get(USER_SESSION_COOKIE)?.value;
@@ -28,13 +26,44 @@ export async function middleware(request) {
     verifyUserSessionToken(userToken)
   ]);
   const advisorAuthenticated = authenticated || canAccessAdvisorWorkspace(userSession);
+  const adminAuthenticated = authenticated || canAccessAdminWorkspace(userSession);
 
   if (pathname === "/advisor/login" || pathname === "/advisor/register") {
     if (advisorAuthenticated) {
+      const nextPath = request.nextUrl.searchParams.get("next");
+
+      if (nextPath?.startsWith("/admin") && adminAuthenticated) {
+        return NextResponse.redirect(absoluteAppUrl(nextPath, request.url));
+      }
+
       return NextResponse.redirect(absoluteAppUrl("/advisor", request.url));
     }
 
     return NextResponse.next();
+  }
+
+  if (pathname === "/admin/login") {
+    if (adminAuthenticated) {
+      return NextResponse.redirect(absoluteAppUrl("/admin", request.url));
+    }
+
+    const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+    loginUrl.searchParams.set("next", "/admin");
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith("/admin")) {
+    if (adminAuthenticated) {
+      return NextResponse.next();
+    }
+
+    if (advisorAuthenticated) {
+      return NextResponse.redirect(absoluteAppUrl("/advisor", request.url));
+    }
+
+    const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+    loginUrl.searchParams.set("next", `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
   }
 
   if (advisorAuthenticated) {

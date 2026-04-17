@@ -3,7 +3,7 @@ import { ADMIN_SESSION_COOKIE } from "../../../../lib/admin-auth";
 import { absoluteAppUrl } from "../../../../lib/paths";
 
 export async function POST(request) {
-  const response = NextResponse.redirect(absoluteAppUrl("/advisor/login?logged_out=1", request.url), { status: 303 });
+  const response = NextResponse.redirect(absoluteAppUrl("/admin/login?logged_out=1", request.url), { status: 303 });
   response.cookies.set(ADMIN_SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",

@@ -41,5 +41,812 @@
       ]
     }
   ],
-  "leads": []
+  "leads": [
+    {
+      "id": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "createdAt": "2026-04-17T03:37:43.146Z",
+      "created_at": "2026-04-17T03:37:43.146Z",
+      "updatedAt": "2026-04-17T03:37:43.146Z",
+      "updated_at": "2026-04-17T03:37:43.146Z",
+      "userId": "db6ea403-b41c-413d-851e-1d81402f9721",
+      "user_id": "db6ea403-b41c-413d-851e-1d81402f9721",
+      "status": "已派单",
+      "assignedConsultantId": "consultant-ava",
+      "assigned_consultant_id": "consultant-ava",
+      "sourceChannel": "direct",
+      "effectiveChannel": "direct",
+      "utmSource": "",
+      "utmMedium": "",
+      "utmCampaign": "",
+      "utmContent": "",
+      "entryPath": "/questionnaire",
+      "landingUrl": "http://localhost:3000/questionnaire",
+      "referrer": "",
+      "priority": "高",
+      "grade": "A",
+      "assignment": {
+        "consultantId": "consultant-ava",
+        "consultantName": "Ava 陈老师",
+        "reason": "匹配方向：低龄插班 / 本地学校；当前开放线索 0 条，优先级适合承接该案例。",
+        "pool": [
+          {
+            "id": "consultant-ava",
+            "name": "Ava 陈老师",
+            "focusLabel": "低龄插班 / 本地学校",
+            "activeLoad": 0
+          },
+          {
+            "id": "consultant-zoe",
+            "name": "Zoe 周老师",
+            "focusLabel": "高意向首咨 / 跟进转化",
+            "activeLoad": 0
+          },
+          {
+            "id": "consultant-ryan",
+            "name": "Ryan 林老师",
+            "focusLabel": "国际学校 / 英语规划",
+            "activeLoad": 0
+          }
+        ]
+      },
+      "answers": {
+        "studentName": "test",
+        "grade": "g7-g9",
+        "location": "上海",
+        "currentSchoolType": "public",
+        "hkIdentity": "yes",
+        "academicLevel": "top",
+        "englishLevel": "good",
+        "subjectRisk": "none",
+        "selfDrive": "high",
+        "motivation": "",
+        "preferredPath": "local",
+        "timeline": "urgent",
+        "transitionAcceptance": "yes",
+        "budget": "under-80k",
+        "residencyFlex": "partial",
+        "parentPriority": "academic",
+        "biggestConcern": "unclear",
+        "consultationIntent": "high",
+        "contactName": "陆先生",
+        "contactMethod": "richardlwh",
+        "contactWindow": "workday",
+        "sourceChannel": "direct",
+        "userId": "db6ea403-b41c-413d-851e-1d81402f9721",
+        "identityTypeRaw": "permanent_resident",
+        "teachingLanguageRaw": "chinese",
+        "englishExamRaw": "",
+        "otherEnglishScoresRaw": "",
+        "longTermGoalRaw": "hk_path",
+        "concernsRaw": [
+          "school_choice",
+          "path_unclear"
+        ],
+        "childWillingnessRaw": "willing"
+      },
+      "result": {
+        "primaryPath": "local",
+        "primaryPathLabel": "香港本地学校插班路径",
+        "pathSummary": "更适合先围绕本地学校切入，重点看时间窗口、身份条件和适应成本。 ",
+        "riskTags": [
+          "时间窗口紧",
+          "预算偏紧",
+          "路径认知不清"
+        ],
+        "nextActions": [
+          "先确认目标切入时间点，以及是否接受插班或过渡方案。",
+          "结合当前预算和家庭安排，缩小到可执行的学校带和方案带。",
+          "尽快核对身份、时间窗口与可接受的通勤/陪读安排。",
+          "预约真人顾问进行 1v1 细化判断，确认优先动作顺序。"
+        ],
+        "scores": {
+          "urgency": 5,
+          "budget": 2,
+          "intent": 5,
+          "complexity": 1,
+          "composite": 3.6,
+          "grade": "A",
+          "priority": "高"
+        },
+        "consultantType": "标准顾问",
+        "overview": "综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。",
+        "identityVerdict": "资格全开",
+        "timingVerdict": "紧急补录期",
+        "englishRiskLevel": "低风险",
+        "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+        "internalTags": [
+          "TAG_LAST_CHANCE",
+          "TAG_BUDGET_ALARM"
+        ],
+        "currentReport": {
+          "reportVersion": 1,
+          "reportType": "ai_draft",
+          "createdAt": "2026-04-17T03:37:43.146Z",
+          "isVisibleToUser": true,
+          "contentMarkdown": "# 香港转学 AI 诊断报告\n\n## 0. 基本信息\n- **学生主体**：test\n- **当前年级**：初中 7-9 年级\n- **身份状态**：资格全开\n- **预算匹配**：预算主要覆盖官津或低学费路径\n\n## 1. 核心结论 (The Verdict)\n综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。\n\n> **AI 专家判定**：\n> 当前身份条件不构成直接阻断，可继续推进下一步判断。\n> 时间窗口紧、预算偏紧、路径认知不清\n\n## 2. 核心诊断维度\n\n### 2.1 申请时机与窗口 (Intake Timing)\n- **判定状态**：紧急补录期\n- **详细评估**：当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。\n\n### 2.2 语言衔接风险 (English Gap)\n- **预警等级**：低风险\n- **用户当前**：英文基础较好，具备继续强化并承接更高要求的条件\n- **目标池门槛**：本地学校主流插班门槛\n- **专家建议**：当前更适合尽快进入学校筛选与面试准备。\n\n## 3. 目标学校穿透建议 (Target School Drilldown)\n### 本地学校插班池（待学校库接入后细化）\n- **适配度评估**：9 / 10\n- **关键卡点**：重点在时间窗口和面试准备\n- **顾问私货**：更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。\n- **学费提示**：预算主要覆盖官津或低学费路径\n\n## 4. 深度风险预警 (Critical Alerts)\n- **时间窗口偏紧**：当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。\n- **预算边界**：后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。\n\n## 5. 后续行动清单 (Next Steps)\n\n### 第一阶段：立即执行 (下一步 24 小时)\n1. 先确认目标切入时间点，以及是否接受插班或过渡方案。\n2. 结合当前预算和家庭安排，缩小到可执行的学校带和方案带。\n\n### 第二阶段：资料储备 (1-2 周)\n1. 尽快核对身份、时间窗口与可接受的通勤/陪读安排。\n2. 预约真人顾问进行 1v1 细化判断，确认优先动作顺序。\n\n## 6. 专家人工介入引导 (Convert to Consultation)\n\n> **由于你的案例涉及 时间窗口紧、预算偏紧、路径认知不清，建议尽快预约资深顾问进行深度评估。**\n\n## 7. 诊断依据声明\n- 规则版本：logic-rules-v1\n- 模型引擎：k12-expert-engine-v2\n- 学校库快照：待接入学校数据库后补齐",
+          "summary": {
+            "identityVerdict": "资格全开",
+            "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+            "intakeWindowVerdict": "紧急补录期",
+            "englishRiskLevel": "低风险",
+            "criticalWarnings": [
+              {
+                "title": "时间窗口偏紧",
+                "content": "当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。"
+              },
+              {
+                "title": "预算边界",
+                "content": "后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。"
+              }
+            ],
+            "recommendedSchools": [
+              {
+                "schoolName": "本地学校插班池（待学校库接入后细化）",
+                "matchScore": 9,
+                "criticalBottleneck": "重点在时间窗口和面试准备",
+                "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+                "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+              }
+            ]
+          }
+        },
+        "versionSnapshot": {
+          "questionnaireVersion": "compat-v2-2026-04-17",
+          "rulesVersion": "logic-rules-v1",
+          "reportTemplateVersion": "diagnosis-report-v1.2",
+          "engineVersion": "k12-expert-engine-v2"
+        },
+        "student": {
+          "name": "test",
+          "grade": "g7-g9",
+          "location": "上海"
+        },
+        "caseRecord": {
+          "status": "consult_intent_submitted",
+          "assignedConsultantId": "consultant-ava",
+          "assignedConsultantName": "Ava 陈老师",
+          "createdAt": "2026-04-17T03:37:43.146Z"
+        },
+        "questionnaireResponse": {
+          "version": "compat-v2-2026-04-17",
+          "submittedAt": "2026-04-17T03:37:43.146Z",
+          "responseJson": {
+            "questionnaireVersion": "compat-v2-2026-04-17",
+            "studentName": "test",
+            "currentGrade": "g7-g9",
+            "currentCity": "上海",
+            "schoolSystem": "public",
+            "teachingLanguage": "chinese",
+            "schoolPerformanceLevel": "top",
+            "englishLevel": "pet",
+            "cambridgeExamResult": "",
+            "otherEnglishScores": "",
+            "targetIntake": "urgent",
+            "longTermGoal": "hk_path",
+            "tuitionBudget": "under-80k",
+            "mainConcerns": [
+              "school_choice",
+              "path_unclear"
+            ],
+            "mainConcernDetails": "",
+            "childWillingness": "willing",
+            "contactName": "陆先生",
+            "mobile": "",
+            "wechatId": "richardlwh",
+            "preferredContactWindow": "workday",
+            "sourceChannel": "direct",
+            "tracking": {
+              "utmSource": "",
+              "utmMedium": "",
+              "utmCampaign": "",
+              "utmContent": "",
+              "entryPath": "/questionnaire",
+              "landingUrl": "http://localhost:3000/questionnaire",
+              "referrer": "",
+              "effectiveChannel": "direct"
+            },
+            "rawAnswers": {
+              "identity_type": "permanent_resident",
+              "identity_type_other": "",
+              "student_name": "test",
+              "current_grade": "g7-g9",
+              "current_city": "上海",
+              "school_system": "public",
+              "teaching_language": "chinese",
+              "school_performance_level": "top",
+              "english_level": "pet",
+              "cambridge_exam_result": "",
+              "other_english_scores": "",
+              "target_intake": "urgent",
+              "long_term_goal": "hk_path",
+              "tuition_budget": "under-80k",
+              "main_concerns": [
+                "school_choice",
+                "path_unclear"
+              ],
+              "other_concern": "",
+              "main_concern_details": "",
+              "child_willingness": "willing",
+              "consultation_intent": "high",
+              "contact_window": "workday",
+              "parent_name": "陆先生",
+              "mobile": "",
+              "wechat_id": "richardlwh",
+              "userId": "db6ea403-b41c-413d-851e-1d81402f9721"
+            }
+          }
+        },
+        "diagnosticJob": {
+          "status": "succeeded",
+          "startedAt": "2026-04-17T03:37:43.146Z",
+          "finishedAt": "2026-04-17T03:37:43.146Z",
+          "versionSnapshot": {
+            "questionnaireVersion": "compat-v2-2026-04-17",
+            "rulesVersion": "logic-rules-v1",
+            "reportTemplateVersion": "diagnosis-report-v1.2",
+            "engineVersion": "k12-expert-engine-v2"
+          }
+        },
+        "diagnosticResult": {
+          "ruleResultJson": {
+            "identityAssessment": {
+              "input": "已有香港身份",
+              "verdict": "资格全开",
+              "warning": "",
+              "blocked": false
+            },
+            "timingAssessment": {
+              "verdict": "紧急补录期",
+              "analysis": "当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。",
+              "urgencyBand": "urgent"
+            },
+            "englishAssessment": {
+              "riskValue": 0.5,
+              "level": "低风险",
+              "targetBarrierLabel": "本地学校主流插班门槛",
+              "userLevelDescription": "英文基础较好，具备继续强化并承接更高要求的条件",
+              "bridgeAdvice": "当前更适合尽快进入学校筛选与面试准备。"
+            },
+            "budgetAssessment": {
+              "summary": "预算主要覆盖官津或低学费路径",
+              "upper": 80000,
+              "label": "8 万以下"
+            },
+            "primaryPath": "local"
+          },
+          "schoolDataSnapshotJson": {
+            "source": "pending-school-import",
+            "recommendedSchools": [
+              {
+                "schoolName": "本地学校插班池（待学校库接入后细化）",
+                "matchScore": 9,
+                "criticalBottleneck": "重点在时间窗口和面试准备",
+                "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+                "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+              }
+            ]
+          },
+          "recommendationTags": {
+            "internalTags": [
+              "TAG_LAST_CHANCE",
+              "TAG_BUDGET_ALARM"
+            ],
+            "riskTags": [
+              "时间窗口紧",
+              "预算偏紧",
+              "路径认知不清"
+            ],
+            "nextActions": [
+              "先确认目标切入时间点，以及是否接受插班或过渡方案。",
+              "结合当前预算和家庭安排，缩小到可执行的学校带和方案带。",
+              "尽快核对身份、时间窗口与可接受的通勤/陪读安排。",
+              "预约真人顾问进行 1v1 细化判断，确认优先动作顺序。"
+            ]
+          },
+          "createdAt": "2026-04-17T03:37:43.146Z"
+        },
+        "reportVersions": [
+          {
+            "reportVersion": 1,
+            "reportType": "ai_draft",
+            "createdAt": "2026-04-17T03:37:43.146Z",
+            "isVisibleToUser": true,
+            "contentMarkdown": "# 香港转学 AI 诊断报告\n\n## 0. 基本信息\n- **学生主体**：test\n- **当前年级**：初中 7-9 年级\n- **身份状态**：资格全开\n- **预算匹配**：预算主要覆盖官津或低学费路径\n\n## 1. 核心结论 (The Verdict)\n综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。\n\n> **AI 专家判定**：\n> 当前身份条件不构成直接阻断，可继续推进下一步判断。\n> 时间窗口紧、预算偏紧、路径认知不清\n\n## 2. 核心诊断维度\n\n### 2.1 申请时机与窗口 (Intake Timing)\n- **判定状态**：紧急补录期\n- **详细评估**：当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。\n\n### 2.2 语言衔接风险 (English Gap)\n- **预警等级**：低风险\n- **用户当前**：英文基础较好，具备继续强化并承接更高要求的条件\n- **目标池门槛**：本地学校主流插班门槛\n- **专家建议**：当前更适合尽快进入学校筛选与面试准备。\n\n## 3. 目标学校穿透建议 (Target School Drilldown)\n### 本地学校插班池（待学校库接入后细化）\n- **适配度评估**：9 / 10\n- **关键卡点**：重点在时间窗口和面试准备\n- **顾问私货**：更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。\n- **学费提示**：预算主要覆盖官津或低学费路径\n\n## 4. 深度风险预警 (Critical Alerts)\n- **时间窗口偏紧**：当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。\n- **预算边界**：后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。\n\n## 5. 后续行动清单 (Next Steps)\n\n### 第一阶段：立即执行 (下一步 24 小时)\n1. 先确认目标切入时间点，以及是否接受插班或过渡方案。\n2. 结合当前预算和家庭安排，缩小到可执行的学校带和方案带。\n\n### 第二阶段：资料储备 (1-2 周)\n1. 尽快核对身份、时间窗口与可接受的通勤/陪读安排。\n2. 预约真人顾问进行 1v1 细化判断，确认优先动作顺序。\n\n## 6. 专家人工介入引导 (Convert to Consultation)\n\n> **由于你的案例涉及 时间窗口紧、预算偏紧、路径认知不清，建议尽快预约资深顾问进行深度评估。**\n\n## 7. 诊断依据声明\n- 规则版本：logic-rules-v1\n- 模型引擎：k12-expert-engine-v2\n- 学校库快照：待接入学校数据库后补齐",
+            "summary": {
+              "identityVerdict": "资格全开",
+              "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+              "intakeWindowVerdict": "紧急补录期",
+              "englishRiskLevel": "低风险",
+              "criticalWarnings": [
+                {
+                  "title": "时间窗口偏紧",
+                  "content": "当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。"
+                },
+                {
+                  "title": "预算边界",
+                  "content": "后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。"
+                }
+              ],
+              "recommendedSchools": [
+                {
+                  "schoolName": "本地学校插班池（待学校库接入后细化）",
+                  "matchScore": 9,
+                  "criticalBottleneck": "重点在时间窗口和面试准备",
+                  "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+                  "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+                }
+              ]
+            }
+          }
+        ],
+        "consultationRequest": {
+          "requestStatus": "submitted",
+          "contactTimePreference": "workday",
+          "notes": "",
+          "submittedAt": "2026-04-17T03:37:43.146Z"
+        },
+        "adminFollowUpRecord": {
+          "status": "consult_intent_submitted",
+          "handoffSummary": "",
+          "followUpNotes": [],
+          "updatedAt": "2026-04-17T03:37:43.146Z"
+        }
+      },
+      "student": {
+        "name": "test",
+        "grade": "g7-g9",
+        "location": "上海"
+      },
+      "caseRecord": {
+        "status": "consult_intent_submitted",
+        "assignedConsultantId": "consultant-ava",
+        "assignedConsultantName": "Ava 陈老师",
+        "createdAt": "2026-04-17T03:37:43.146Z"
+      },
+      "questionnaireResponse": {
+        "version": "compat-v2-2026-04-17",
+        "submittedAt": "2026-04-17T03:37:43.146Z",
+        "responseJson": {
+          "questionnaireVersion": "compat-v2-2026-04-17",
+          "studentName": "test",
+          "currentGrade": "g7-g9",
+          "currentCity": "上海",
+          "schoolSystem": "public",
+          "teachingLanguage": "chinese",
+          "schoolPerformanceLevel": "top",
+          "englishLevel": "pet",
+          "cambridgeExamResult": "",
+          "otherEnglishScores": "",
+          "targetIntake": "urgent",
+          "longTermGoal": "hk_path",
+          "tuitionBudget": "under-80k",
+          "mainConcerns": [
+            "school_choice",
+            "path_unclear"
+          ],
+          "mainConcernDetails": "",
+          "childWillingness": "willing",
+          "contactName": "陆先生",
+          "mobile": "",
+          "wechatId": "richardlwh",
+          "preferredContactWindow": "workday",
+          "sourceChannel": "direct",
+          "tracking": {
+            "utmSource": "",
+            "utmMedium": "",
+            "utmCampaign": "",
+            "utmContent": "",
+            "entryPath": "/questionnaire",
+            "landingUrl": "http://localhost:3000/questionnaire",
+            "referrer": "",
+            "effectiveChannel": "direct"
+          },
+          "rawAnswers": {
+            "identity_type": "permanent_resident",
+            "identity_type_other": "",
+            "student_name": "test",
+            "current_grade": "g7-g9",
+            "current_city": "上海",
+            "school_system": "public",
+            "teaching_language": "chinese",
+            "school_performance_level": "top",
+            "english_level": "pet",
+            "cambridge_exam_result": "",
+            "other_english_scores": "",
+            "target_intake": "urgent",
+            "long_term_goal": "hk_path",
+            "tuition_budget": "under-80k",
+            "main_concerns": [
+              "school_choice",
+              "path_unclear"
+            ],
+            "other_concern": "",
+            "main_concern_details": "",
+            "child_willingness": "willing",
+            "consultation_intent": "high",
+            "contact_window": "workday",
+            "parent_name": "陆先生",
+            "mobile": "",
+            "wechat_id": "richardlwh",
+            "userId": "db6ea403-b41c-413d-851e-1d81402f9721"
+          }
+        }
+      },
+      "diagnosticJob": {
+        "status": "succeeded",
+        "startedAt": "2026-04-17T03:37:43.146Z",
+        "finishedAt": "2026-04-17T03:37:43.146Z",
+        "versionSnapshot": {
+          "questionnaireVersion": "compat-v2-2026-04-17",
+          "rulesVersion": "logic-rules-v1",
+          "reportTemplateVersion": "diagnosis-report-v1.2",
+          "engineVersion": "k12-expert-engine-v2"
+        }
+      },
+      "diagnosticResult": {
+        "ruleResultJson": {
+          "identityAssessment": {
+            "input": "已有香港身份",
+            "verdict": "资格全开",
+            "warning": "",
+            "blocked": false
+          },
+          "timingAssessment": {
+            "verdict": "紧急补录期",
+            "analysis": "当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。",
+            "urgencyBand": "urgent"
+          },
+          "englishAssessment": {
+            "riskValue": 0.5,
+            "level": "低风险",
+            "targetBarrierLabel": "本地学校主流插班门槛",
+            "userLevelDescription": "英文基础较好，具备继续强化并承接更高要求的条件",
+            "bridgeAdvice": "当前更适合尽快进入学校筛选与面试准备。"
+          },
+          "budgetAssessment": {
+            "summary": "预算主要覆盖官津或低学费路径",
+            "upper": 80000,
+            "label": "8 万以下"
+          },
+          "primaryPath": "local"
+        },
+        "schoolDataSnapshotJson": {
+          "source": "pending-school-import",
+          "recommendedSchools": [
+            {
+              "schoolName": "本地学校插班池（待学校库接入后细化）",
+              "matchScore": 9,
+              "criticalBottleneck": "重点在时间窗口和面试准备",
+              "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+              "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+            }
+          ]
+        },
+        "recommendationTags": {
+          "internalTags": [
+            "TAG_LAST_CHANCE",
+            "TAG_BUDGET_ALARM"
+          ],
+          "riskTags": [
+            "时间窗口紧",
+            "预算偏紧",
+            "路径认知不清"
+          ],
+          "nextActions": [
+            "先确认目标切入时间点，以及是否接受插班或过渡方案。",
+            "结合当前预算和家庭安排，缩小到可执行的学校带和方案带。",
+            "尽快核对身份、时间窗口与可接受的通勤/陪读安排。",
+            "预约真人顾问进行 1v1 细化判断，确认优先动作顺序。"
+          ]
+        },
+        "createdAt": "2026-04-17T03:37:43.146Z"
+      },
+      "currentReport": {
+        "reportVersion": 1,
+        "reportType": "ai_draft",
+        "createdAt": "2026-04-17T03:37:43.146Z",
+        "isVisibleToUser": true,
+        "contentMarkdown": "# 香港转学 AI 诊断报告\n\n## 0. 基本信息\n- **学生主体**：test\n- **当前年级**：初中 7-9 年级\n- **身份状态**：资格全开\n- **预算匹配**：预算主要覆盖官津或低学费路径\n\n## 1. 核心结论 (The Verdict)\n综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。\n\n> **AI 专家判定**：\n> 当前身份条件不构成直接阻断，可继续推进下一步判断。\n> 时间窗口紧、预算偏紧、路径认知不清\n\n## 2. 核心诊断维度\n\n### 2.1 申请时机与窗口 (Intake Timing)\n- **判定状态**：紧急补录期\n- **详细评估**：当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。\n\n### 2.2 语言衔接风险 (English Gap)\n- **预警等级**：低风险\n- **用户当前**：英文基础较好，具备继续强化并承接更高要求的条件\n- **目标池门槛**：本地学校主流插班门槛\n- **专家建议**：当前更适合尽快进入学校筛选与面试准备。\n\n## 3. 目标学校穿透建议 (Target School Drilldown)\n### 本地学校插班池（待学校库接入后细化）\n- **适配度评估**：9 / 10\n- **关键卡点**：重点在时间窗口和面试准备\n- **顾问私货**：更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。\n- **学费提示**：预算主要覆盖官津或低学费路径\n\n## 4. 深度风险预警 (Critical Alerts)\n- **时间窗口偏紧**：当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。\n- **预算边界**：后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。\n\n## 5. 后续行动清单 (Next Steps)\n\n### 第一阶段：立即执行 (下一步 24 小时)\n1. 先确认目标切入时间点，以及是否接受插班或过渡方案。\n2. 结合当前预算和家庭安排，缩小到可执行的学校带和方案带。\n\n### 第二阶段：资料储备 (1-2 周)\n1. 尽快核对身份、时间窗口与可接受的通勤/陪读安排。\n2. 预约真人顾问进行 1v1 细化判断，确认优先动作顺序。\n\n## 6. 专家人工介入引导 (Convert to Consultation)\n\n> **由于你的案例涉及 时间窗口紧、预算偏紧、路径认知不清，建议尽快预约资深顾问进行深度评估。**\n\n## 7. 诊断依据声明\n- 规则版本：logic-rules-v1\n- 模型引擎：k12-expert-engine-v2\n- 学校库快照：待接入学校数据库后补齐",
+        "summary": {
+          "identityVerdict": "资格全开",
+          "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+          "intakeWindowVerdict": "紧急补录期",
+          "englishRiskLevel": "低风险",
+          "criticalWarnings": [
+            {
+              "title": "时间窗口偏紧",
+              "content": "当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。"
+            },
+            {
+              "title": "预算边界",
+              "content": "后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。"
+            }
+          ],
+          "recommendedSchools": [
+            {
+              "schoolName": "本地学校插班池（待学校库接入后细化）",
+              "matchScore": 9,
+              "criticalBottleneck": "重点在时间窗口和面试准备",
+              "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+              "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+            }
+          ]
+        }
+      },
+      "reportVersions": [
+        {
+          "reportVersion": 1,
+          "reportType": "ai_draft",
+          "createdAt": "2026-04-17T03:37:43.146Z",
+          "isVisibleToUser": true,
+          "contentMarkdown": "# 香港转学 AI 诊断报告\n\n## 0. 基本信息\n- **学生主体**：test\n- **当前年级**：初中 7-9 年级\n- **身份状态**：资格全开\n- **预算匹配**：预算主要覆盖官津或低学费路径\n\n## 1. 核心结论 (The Verdict)\n综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。\n\n> **AI 专家判定**：\n> 当前身份条件不构成直接阻断，可继续推进下一步判断。\n> 时间窗口紧、预算偏紧、路径认知不清\n\n## 2. 核心诊断维度\n\n### 2.1 申请时机与窗口 (Intake Timing)\n- **判定状态**：紧急补录期\n- **详细评估**：当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。\n\n### 2.2 语言衔接风险 (English Gap)\n- **预警等级**：低风险\n- **用户当前**：英文基础较好，具备继续强化并承接更高要求的条件\n- **目标池门槛**：本地学校主流插班门槛\n- **专家建议**：当前更适合尽快进入学校筛选与面试准备。\n\n## 3. 目标学校穿透建议 (Target School Drilldown)\n### 本地学校插班池（待学校库接入后细化）\n- **适配度评估**：9 / 10\n- **关键卡点**：重点在时间窗口和面试准备\n- **顾问私货**：更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。\n- **学费提示**：预算主要覆盖官津或低学费路径\n\n## 4. 深度风险预警 (Critical Alerts)\n- **时间窗口偏紧**：当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。\n- **预算边界**：后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。\n\n## 5. 后续行动清单 (Next Steps)\n\n### 第一阶段：立即执行 (下一步 24 小时)\n1. 先确认目标切入时间点，以及是否接受插班或过渡方案。\n2. 结合当前预算和家庭安排，缩小到可执行的学校带和方案带。\n\n### 第二阶段：资料储备 (1-2 周)\n1. 尽快核对身份、时间窗口与可接受的通勤/陪读安排。\n2. 预约真人顾问进行 1v1 细化判断，确认优先动作顺序。\n\n## 6. 专家人工介入引导 (Convert to Consultation)\n\n> **由于你的案例涉及 时间窗口紧、预算偏紧、路径认知不清，建议尽快预约资深顾问进行深度评估。**\n\n## 7. 诊断依据声明\n- 规则版本：logic-rules-v1\n- 模型引擎：k12-expert-engine-v2\n- 学校库快照：待接入学校数据库后补齐",
+          "summary": {
+            "identityVerdict": "资格全开",
+            "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+            "intakeWindowVerdict": "紧急补录期",
+            "englishRiskLevel": "低风险",
+            "criticalWarnings": [
+              {
+                "title": "时间窗口偏紧",
+                "content": "当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。"
+              },
+              {
+                "title": "预算边界",
+                "content": "后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。"
+              }
+            ],
+            "recommendedSchools": [
+              {
+                "schoolName": "本地学校插班池（待学校库接入后细化）",
+                "matchScore": 9,
+                "criticalBottleneck": "重点在时间窗口和面试准备",
+                "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+                "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+              }
+            ]
+          }
+        }
+      ],
+      "consultationRequest": {
+        "requestStatus": "submitted",
+        "contactTimePreference": "workday",
+        "notes": "",
+        "submittedAt": "2026-04-17T03:37:43.146Z"
+      },
+      "adminFollowUpRecord": {
+        "status": "consult_intent_submitted",
+        "handoffSummary": "",
+        "followUpNotes": [],
+        "updatedAt": "2026-04-17T03:37:43.146Z"
+      },
+      "followUps": [
+        {
+          "id": "efcb3e8e-a3b1-4cfd-b658-4cc306ef5db3",
+          "createdAt": "2026-04-17T03:37:43.146Z",
+          "author": "系统",
+          "note": "已完成前诊、规则判定和报告草稿生成，建议派给 Ava 陈老师。"
+        }
+      ],
+      "channelLabel": "直接访问",
+      "tracking": {
+        "effectiveChannel": "direct",
+        "utmSource": "",
+        "utmMedium": "",
+        "utmCampaign": "",
+        "utmContent": "",
+        "entryPath": "/questionnaire",
+        "landingUrl": "http://localhost:3000/questionnaire",
+        "referrer": ""
+      }
+    }
+  ],
+  "students": [
+    {
+      "id": "7fe4a1f5-d219-49cb-8c85-2988cf89b229",
+      "userId": "db6ea403-b41c-413d-851e-1d81402f9721",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "name": "test",
+      "currentGrade": "g7-g9",
+      "currentCity": "上海",
+      "createdAt": "2026-04-17T03:37:43.146Z",
+      "updatedAt": "2026-04-17T03:37:43.146Z"
+    }
+  ],
+  "cases": [
+    {
+      "id": "d85b8121-4248-4e13-899e-11c88fe1a985",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "userId": "db6ea403-b41c-413d-851e-1d81402f9721",
+      "status": "consult_intent_submitted",
+      "assignedConsultantId": "consultant-ava",
+      "createdAt": "2026-04-17T03:37:43.146Z",
+      "updatedAt": "2026-04-17T03:37:43.146Z"
+    }
+  ],
+  "questionnaireResponses": [
+    {
+      "id": "9c34cd5b-38df-410c-9a84-47970bf39106",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "version": "compat-v2-2026-04-17",
+      "submittedAt": "2026-04-17T03:37:43.146Z",
+      "responseJson": {
+        "questionnaireVersion": "compat-v2-2026-04-17",
+        "studentName": "test",
+        "currentGrade": "g7-g9",
+        "currentCity": "上海",
+        "schoolSystem": "public",
+        "teachingLanguage": "chinese",
+        "schoolPerformanceLevel": "top",
+        "englishLevel": "pet",
+        "cambridgeExamResult": "",
+        "otherEnglishScores": "",
+        "targetIntake": "urgent",
+        "longTermGoal": "hk_path",
+        "tuitionBudget": "under-80k",
+        "mainConcerns": [
+          "school_choice",
+          "path_unclear"
+        ],
+        "mainConcernDetails": "",
+        "childWillingness": "willing",
+        "contactName": "陆先生",
+        "mobile": "",
+        "wechatId": "richardlwh",
+        "preferredContactWindow": "workday",
+        "sourceChannel": "direct",
+        "tracking": {
+          "utmSource": "",
+          "utmMedium": "",
+          "utmCampaign": "",
+          "utmContent": "",
+          "entryPath": "/questionnaire",
+          "landingUrl": "http://localhost:3000/questionnaire",
+          "referrer": "",
+          "effectiveChannel": "direct"
+        },
+        "rawAnswers": {
+          "identity_type": "permanent_resident",
+          "identity_type_other": "",
+          "student_name": "test",
+          "current_grade": "g7-g9",
+          "current_city": "上海",
+          "school_system": "public",
+          "teaching_language": "chinese",
+          "school_performance_level": "top",
+          "english_level": "pet",
+          "cambridge_exam_result": "",
+          "other_english_scores": "",
+          "target_intake": "urgent",
+          "long_term_goal": "hk_path",
+          "tuition_budget": "under-80k",
+          "main_concerns": [
+            "school_choice",
+            "path_unclear"
+          ],
+          "other_concern": "",
+          "main_concern_details": "",
+          "child_willingness": "willing",
+          "consultation_intent": "high",
+          "contact_window": "workday",
+          "parent_name": "陆先生",
+          "mobile": "",
+          "wechat_id": "richardlwh",
+          "userId": "db6ea403-b41c-413d-851e-1d81402f9721"
+        }
+      }
+    }
+  ],
+  "diagnosticJobs": [
+    {
+      "id": "aa8e9aef-7eb7-4efc-b5de-f47aef771d89",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "status": "succeeded",
+      "startedAt": "2026-04-17T03:37:43.146Z",
+      "finishedAt": "2026-04-17T03:37:43.146Z",
+      "versionSnapshot": {
+        "questionnaireVersion": "compat-v2-2026-04-17",
+        "rulesVersion": "logic-rules-v1",
+        "reportTemplateVersion": "diagnosis-report-v1.2",
+        "engineVersion": "k12-expert-engine-v2"
+      }
+    }
+  ],
+  "diagnosticResults": [
+    {
+      "id": "6b4d2f0b-2d10-4e61-b99a-5f3e7e83f9e1",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "ruleResultJson": {
+        "identityAssessment": {
+          "input": "已有香港身份",
+          "verdict": "资格全开",
+          "warning": "",
+          "blocked": false
+        },
+        "timingAssessment": {
+          "verdict": "紧急补录期",
+          "analysis": "当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。",
+          "urgencyBand": "urgent"
+        },
+        "englishAssessment": {
+          "riskValue": 0.5,
+          "level": "低风险",
+          "targetBarrierLabel": "本地学校主流插班门槛",
+          "userLevelDescription": "英文基础较好，具备继续强化并承接更高要求的条件",
+          "bridgeAdvice": "当前更适合尽快进入学校筛选与面试准备。"
+        },
+        "budgetAssessment": {
+          "summary": "预算主要覆盖官津或低学费路径",
+          "upper": 80000,
+          "label": "8 万以下"
+        },
+        "primaryPath": "local"
+      },
+      "schoolDataSnapshotJson": {
+        "source": "pending-school-import",
+        "recommendedSchools": [
+          {
+            "schoolName": "本地学校插班池（待学校库接入后细化）",
+            "matchScore": 9,
+            "criticalBottleneck": "重点在时间窗口和面试准备",
+            "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+            "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+          }
+        ]
+      },
+      "recommendationTags": {
+        "internalTags": [
+          "TAG_LAST_CHANCE",
+          "TAG_BUDGET_ALARM"
+        ],
+        "riskTags": [
+          "时间窗口紧",
+          "预算偏紧",
+          "路径认知不清"
+        ],
+        "nextActions": [
+          "先确认目标切入时间点，以及是否接受插班或过渡方案。",
+          "结合当前预算和家庭安排，缩小到可执行的学校带和方案带。",
+          "尽快核对身份、时间窗口与可接受的通勤/陪读安排。",
+          "预约真人顾问进行 1v1 细化判断，确认优先动作顺序。"
+        ]
+      },
+      "createdAt": "2026-04-17T03:37:43.146Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "2e945e1d-3660-4d56-ad1d-3cbe60701915",
+      "leadId": "72657e41-a10c-4294-b941-0ff700cfdc9d",
+      "reportVersion": 1,
+      "reportType": "ai_draft",
+      "createdAt": "2026-04-17T03:37:43.146Z",
+      "isVisibleToUser": true,
+      "contentMarkdown": "# 香港转学 AI 诊断报告\n\n## 0. 基本信息\n- **学生主体**：test\n- **当前年级**：初中 7-9 年级\n- **身份状态**：资格全开\n- **预算匹配**：预算主要覆盖官津或低学费路径\n\n## 1. 核心结论 (The Verdict)\n综合当前年级、语言基础、预算和推进意愿，系统判断你们现阶段更适合先走“香港本地学校插班路径”方向，再由顾问做进一步细化。\n\n> **AI 专家判定**：\n> 当前身份条件不构成直接阻断，可继续推进下一步判断。\n> 时间窗口紧、预算偏紧、路径认知不清\n\n## 2. 核心诊断维度\n\n### 2.1 申请时机与窗口 (Intake Timing)\n- **判定状态**：紧急补录期\n- **详细评估**：当前计划切入时间较近，而系统月份矩阵显示现在属于“插班黄金期”阶段，后续策略应明显偏向补录、保底与高频跟进。\n\n### 2.2 语言衔接风险 (English Gap)\n- **预警等级**：低风险\n- **用户当前**：英文基础较好，具备继续强化并承接更高要求的条件\n- **目标池门槛**：本地学校主流插班门槛\n- **专家建议**：当前更适合尽快进入学校筛选与面试准备。\n\n## 3. 目标学校穿透建议 (Target School Drilldown)\n### 本地学校插班池（待学校库接入后细化）\n- **适配度评估**：9 / 10\n- **关键卡点**：重点在时间窗口和面试准备\n- **顾问私货**：更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。\n- **学费提示**：预算主要覆盖官津或低学费路径\n\n## 4. 深度风险预警 (Critical Alerts)\n- **时间窗口偏紧**：当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。\n- **预算边界**：后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。\n\n## 5. 后续行动清单 (Next Steps)\n\n### 第一阶段：立即执行 (下一步 24 小时)\n1. 先确认目标切入时间点，以及是否接受插班或过渡方案。\n2. 结合当前预算和家庭安排，缩小到可执行的学校带和方案带。\n\n### 第二阶段：资料储备 (1-2 周)\n1. 尽快核对身份、时间窗口与可接受的通勤/陪读安排。\n2. 预约真人顾问进行 1v1 细化判断，确认优先动作顺序。\n\n## 6. 专家人工介入引导 (Convert to Consultation)\n\n> **由于你的案例涉及 时间窗口紧、预算偏紧、路径认知不清，建议尽快预约资深顾问进行深度评估。**\n\n## 7. 诊断依据声明\n- 规则版本：logic-rules-v1\n- 模型引擎：k12-expert-engine-v2\n- 学校库快照：待接入学校数据库后补齐",
+      "summary": {
+        "identityVerdict": "资格全开",
+        "budgetMatchSummary": "预算主要覆盖官津或低学费路径",
+        "intakeWindowVerdict": "紧急补录期",
+        "englishRiskLevel": "低风险",
+        "criticalWarnings": [
+          {
+            "title": "时间窗口偏紧",
+            "content": "当前案例更像补录或抢时间窗口，不适合再做过长周期的信息对比。"
+          },
+          {
+            "title": "预算边界",
+            "content": "后续筛校必须把预算放在前面，不然容易出现路径看起来可行、落地时却不成立的情况。"
+          }
+        ],
+        "recommendedSchools": [
+          {
+            "schoolName": "本地学校插班池（待学校库接入后细化）",
+            "matchScore": 9,
+            "criticalBottleneck": "重点在时间窗口和面试准备",
+            "consultantInsiderTips": "更适合先把可接受的区域、通勤与陪读安排缩小，再进入具体学校筛选。",
+            "tuitionFitNote": "预算主要覆盖官津或低学费路径"
+          }
+        ]
+      }
+    }
+  ]
 }

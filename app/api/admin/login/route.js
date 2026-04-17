@@ -6,16 +6,16 @@ import {
   getAdminSessionCookieOptions,
   hasAdminAuthConfig
 } from "../../../../lib/admin-auth";
-import { absoluteAppUrl, appPath } from "../../../../lib/paths";
+import { absoluteAppUrl } from "../../../../lib/paths";
 
 export async function POST(request) {
   if (!hasAdminAuthConfig()) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/admin", request.url), { status: 303 });
   }
 
   const formData = await request.formData();
   const password = String(formData.get("password") || "");
-  const next = String(formData.get("next") || "/advisor");
+  const next = String(formData.get("next") || "/admin");
 
   if (!password || password !== getAdminPassword()) {
     const loginUrl = absoluteAppUrl("/advisor/login", request.url);
@@ -28,7 +28,7 @@ export async function POST(request) {
     return NextResponse.redirect(loginUrl, { status: 303 });
   }
 
-  const response = NextResponse.redirect(absoluteAppUrl(next.startsWith("/") ? next : "/advisor", request.url), { status: 303 });
+  const response = NextResponse.redirect(absoluteAppUrl(next.startsWith("/") ? next : "/admin", request.url), { status: 303 });
   response.cookies.set(ADMIN_SESSION_COOKIE, await createAdminSessionToken(), getAdminSessionCookieOptions());
 
   return response;
