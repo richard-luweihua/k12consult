@@ -36,9 +36,29 @@ export async function POST(request, { params }) {
       return NextResponse.json({ ok: false, message: "当前案例状态不支持提交咨询意向，请联系管理员处理。" }, { status: 409 });
     }
 
+    const existingMobile =
+      lead.consultationRequest?.mobile?.trim() ||
+      lead.answers?.mobile?.trim() ||
+      user.mobile?.trim() ||
+      "";
+    const existingWechatId =
+      lead.consultationRequest?.wechatId?.trim() ||
+      lead.answers?.wechat_id?.trim() ||
+      "";
+    const submittedMobile = typeof body.mobile === "string" ? body.mobile.trim() : null;
+    const submittedWechatId = typeof body.wechatId === "string" ? body.wechatId.trim() : null;
+    const resolvedMobile = submittedMobile ?? existingMobile;
+    const resolvedWechatId = submittedWechatId ?? existingWechatId;
+
+    if (!resolvedMobile && !resolvedWechatId) {
+      return NextResponse.json({ ok: false, message: "请至少填写手机号或微信号。" }, { status: 400 });
+    }
+
     const updatedLead = await updateLead(lead.id, {
       submitConsultationIntent: true,
       consultationRequestStatus: "submitted",
+      consultationMobile: resolvedMobile,
+      consultationWechatId: resolvedWechatId,
       consultationContactTimePreference:
         typeof body.contactTimePreference === "string"
           ? body.contactTimePreference
