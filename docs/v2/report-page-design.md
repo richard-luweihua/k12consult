@@ -1,4 +1,4 @@
-# K12consult V2 报告页设计（严格版）
+# K12consult V2.0 报告页设计（严格版）
 
 基准文档：`docs/v2/diagnosis-report.md`（模板 V1.2）  
 目标页面：`/result/[submissionId]`

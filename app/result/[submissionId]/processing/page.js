@@ -52,9 +52,9 @@ export default function ResultProcessingPage() {
 
       <section className="hero hero--compact">
         <div className="hero-copy">
-          <p className="eyebrow">V2 Report Engine</p>
+          <p className="eyebrow">V2.0 Report Engine</p>
           <h1>报告生成中</h1>
-          <p className="hero-text">系统正在根据你刚刚提交的信息生成 V2 诊断草稿，通常只需要几秒钟。</p>
+          <p className="hero-text">系统正在根据你刚刚提交的信息生成 V2.0 诊断草稿，通常只需要几秒钟。</p>
         </div>
       </section>
 

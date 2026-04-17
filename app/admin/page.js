@@ -212,7 +212,7 @@ export default async function AdminPage({ searchParams }) {
         <div className="table-header">
           <div>
             <p className="eyebrow">状态看板</p>
-            <h2>按 V2 跟进状态筛选案例</h2>
+            <h2>按 V2.0 跟进状态筛选案例</h2>
           </div>
           <span className="inline-note">当前筛选：{selectedStatusLabel}</span>
         </div>
@@ -249,7 +249,7 @@ export default async function AdminPage({ searchParams }) {
           <div className="lead-table">
             <div className="lead-row lead-row--head">
               <span>家长 / 孩子</span>
-              <span>V2 状态</span>
+              <span>V2.0 状态</span>
               <span>咨询意愿</span>
               <span>预算接受度</span>
               <span>首次联系 SLA</span>

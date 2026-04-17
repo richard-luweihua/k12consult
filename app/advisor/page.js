@@ -243,7 +243,7 @@ export default async function AdvisorPage({ searchParams }) {
       <section className="card table-card">
         <div className="table-header">
           <div>
-            <p className="eyebrow">V2 状态看板</p>
+            <p className="eyebrow">V2.0 状态看板</p>
             <h2>按状态筛选当前线索池</h2>
           </div>
           <span className="inline-note">当前筛选：{selectedStatusLabel}</span>

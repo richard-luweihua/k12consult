@@ -123,7 +123,7 @@ export default async function AdminLeadDetailPage({ params }) {
           </div>
         </div>
         <div className="result-grade">
-          <span>当前 V2 状态</span>
+          <span>当前 V2.0 状态</span>
           <strong>{v2StatusLabelMap[currentV2Status] || currentV2Status}</strong>
           <small>{lead.status}</small>
         </div>
