@@ -23,7 +23,8 @@
 - `cases` (1) --- (N) `questionnaire_responses`
 - `cases` (1) --- (N) `reports`
 - `cases` (1) --- (1) `admin_follow_up_records`
-- `cases` (1) --- (N) `consultations`
+- `cases` (1) --- (N) `consultant_assignments`
+- `cases` (1) --- (N) `case_follow_ups`
 - `diagnostic_jobs` (1) --- (1) `diagnostic_results` (含学校数据快照)
 
 ---
@@ -158,19 +159,21 @@
 - `qualified_at`: datetime
 - `created_at`, `updated_at`
 
-### consultations (顾问正式咨询)
+### consultant_assignments (顾问派单记录)
 - `id`: primary key
 - `case_id`, `consultant_id`: foreign keys
-- `status`: enum (scheduled, completed, cancelled)
-- `notes_markdown`: text
-- `final_advice_json`: json (结构化结论)
-- `created_at`, `updated_at`
+- `assigned_by_admin_id`: foreign key
+- `priority_level`: enum (low, normal, high)
+- `status`: enum (assigned, accepted, reassigned, completed)
+- `handoff_summary`: text
+- `assigned_at`, `created_at`
 
-### follow_up_records (会后跟进)
+### case_follow_ups (顾问跟进记录)
 - `id`: primary key
 - `case_id`, `consultant_id`: foreign keys
-- `category`: varchar (答疑, 进度跟进)
-- `content`: text
+- `status`: enum (follow_up, nurturing, closed)
+- `note`: text
+- `next_action`: varchar (nullable)
 - `created_at`
 
 ---

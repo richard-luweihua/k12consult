@@ -8,11 +8,11 @@
 2. **登录方式支持手机号 + 微信**
 3. **问卷答案先用 JSON 保存**
 4. **报告先单表 + version 字段**
-5. **follow_up 单独建表**
+5. **case_follow_ups 单独建表**
 6. **consultant_assignments 单独建表**
 7. **报告允许顾问修订形成正式版**
 8. **管理员跟进单独建表记录**
-9. **咨询承接流程为：用户提交咨询意向 → 管理员跟进 → 顾问正式咨询**
+9. **咨询承接流程为：用户提交咨询意向 → 管理员跟进 → 顾问接单跟进（成交关闭 / 未成交转资源库）**
 
 ---
 
@@ -151,8 +151,6 @@
 - awaiting_user_info
 - consult_ready_for_assignment
 - consult_assigned
-- consult_scheduled
-- consult_completed
 - nurturing
 - follow_up
 - closed
@@ -333,36 +331,16 @@
 
 ---
 
-## 3.15 consultations
-正式咨询记录表。
+## 3.15 case_follow_ups
+顾问跟进记录表。
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
 | id | bigint / uuid | 主键 |
 | case_id | bigint / uuid | 关联 cases.id |
 | consultant_id | bigint / uuid | 关联 users.id |
-| consultation_request_id | bigint / uuid | 关联 consultation_requests.id |
-| scheduled_at | datetime | 预约时间，可空 |
-| completed_at | datetime | 完成时间，可空 |
-| consultation_status | varchar(32) | pending / scheduled / completed / cancelled |
-| notes_markdown | text | 咨询记录正文 |
-| final_advice_json | json | 最终建议结构化摘要 |
-| created_at | datetime | 创建时间 |
-| updated_at | datetime | 更新时间 |
-
----
-
-## 3.16 follow_up_records
-跟进记录表。
-
-| 字段名 | 类型 | 说明 |
-|---|---|---|
-| id | bigint / uuid | 主键 |
-| case_id | bigint / uuid | 关联 cases.id |
-| consultation_id | bigint / uuid | 关联 consultations.id |
-| consultant_id | bigint / uuid | 关联 users.id |
-| follow_up_type | varchar(32) | qa / service_follow_up / close_note |
-| content | text | 跟进内容 |
+| status | varchar(32) | follow_up / nurturing / closed |
+| note | text | 跟进内容或结论 |
 | next_action | varchar(255) | 下一步动作，可空 |
 | created_at | datetime | 创建时间 |
 
@@ -410,14 +388,10 @@
 - idx_ca_case_id
 - idx_ca_consultant_id
 
-### consultations
-- idx_consultations_case_id
-- idx_consultations_consultant_id
-- idx_consultations_status
-
-### follow_up_records
-- idx_followup_case_id
-- idx_followup_consultation_id
+### case_follow_ups
+- idx_cfu_case_id
+- idx_cfu_consultant_id
+- idx_cfu_status
 
 ---
 

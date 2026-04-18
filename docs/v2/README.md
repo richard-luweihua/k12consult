@@ -20,6 +20,7 @@
 
 当前文件：
 
+- `admin-management-system-design.md`
 - `admin-consultant-pages.md`
 - `admin-followup-and-handoff.md`
 - `admin-followup-details.md`

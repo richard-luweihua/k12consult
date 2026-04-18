@@ -6,12 +6,12 @@
 
 也就是：
 
-**users → profiles（用户 / 顾问 / 管理员）→ students → cases → 问卷 → 诊断任务 → 报告 → 咨询预约 → 顾问分配 → 咨询记录 → 跟进记录**
+**users → profiles（用户 / 顾问 / 管理员）→ students → cases → 问卷 → 诊断任务 → 报告 → 咨询意向 → 管理员跟进 → 顾问分配 → 顾问跟进记录**
 
 其中：
 - **case 是业务主对象**
 - **student（孩子）是 case 的归属主体**
-- **questionnaire_response / diagnostic_job / report / consultation** 都挂在 case 下面
+- **questionnaire_response / diagnostic_job / report / follow_up** 都挂在 case 下面
 - **users + profiles** 负责承接用户、顾问和管理员的基础会员体系
 
 这是当前最适合第一版的结构。
@@ -140,9 +140,12 @@
 - `processing`
 - `report_ready`
 - `report_viewed`
-- `consult_pending`
+- `consult_intent_submitted`
+- `admin_following`
+- `awaiting_user_info`
+- `consult_ready_for_assignment`
 - `consult_assigned`
-- `consult_completed`
+- `nurturing`
 - `follow_up`
 - `closed`
 
@@ -275,8 +278,11 @@
 
 ### request_status 枚举建议
 - `submitted`
-- `contacting`
-- `confirmed`
+- `admin_following`
+- `awaiting_user_info`
+- `qualified`
+- `nurturing`
+- `assigned`
 - `cancelled`
 - `expired`
 
@@ -302,47 +308,50 @@
 
 ---
 
-## 2.14 consultations
-保存正式咨询记录。
+## 2.14 admin_follow_up_records
+保存管理员跟进与交接摘要。
 
 ### 第一版建议字段
 - `id`
 - `case_id`
-- `consultant_id`
 - `consultation_request_id`
-- `scheduled_at`（可空）
-- `completed_at`（可空）
-- `consultation_status`
-- `notes_markdown`
-- `final_advice_json`
+- `admin_user_id`
+- `follow_up_status`
+- `intent_level`
+- `target_timeline`
+- `budget_level`
+- `consult_focus_json`
+- `missing_info_json`
+- `handoff_summary`
+- `next_action`
 - `created_at`
 - `updated_at`
 
-### consultation_status 枚举建议
-- `pending`
-- `scheduled`
-- `completed`
-- `cancelled`
+### follow_up_status 枚举建议
+- `following`
+- `awaiting_user_info`
+- `qualified`
+- `nurturing`
+- `closed`
 
 ---
 
-## 2.15 follow_up_records
-保存咨询后的跟进记录。
+## 2.15 case_follow_ups
+保存顾问接单后的跟进记录。
 
 ### 第一版建议字段
 - `id`
 - `case_id`
-- `consultation_id`
 - `consultant_id`
-- `follow_up_type`
-- `content`
+- `status`
+- `note`
 - `next_action`
 - `created_at`
 
-### follow_up_type 示例
-- `qa`
-- `service_follow_up`
-- `close_note`
+### status 枚举建议
+- `follow_up`
+- `closed`
+- `nurturing`
 
 ---
 
@@ -356,17 +365,20 @@
 | 诊断处理中 | `processing` | `diagnostic_jobs`, `standardized_inputs` | 创建任务、标准化输入 |
 | 报告已生成 | `report_ready` | `diagnostic_results`, `reports` | 保存结果、生成报告 |
 | 用户已查看 | `report_viewed` | `reports` | 写入 viewed_at |
-| 待顾问介入 | `consult_pending` | `consultation_requests` | 创建咨询预约申请 |
+| 已提交咨询意向 | `consult_intent_submitted` | `consultation_requests` | 创建咨询意向申请 |
+| 管理员跟进中 | `admin_following` | `admin_follow_up_records` | 跟进并补齐信息 |
+| 待用户补资料 | `awaiting_user_info` | `admin_follow_up_records` | 更新缺失信息与催促动作 |
+| 可分配顾问 | `consult_ready_for_assignment` | `admin_follow_up_records` | 标记为可分配 |
 | 顾问已接手 | `consult_assigned` | `consultant_assignments` | 管理员分配顾问 |
-| 咨询已完成 | `consult_completed` | `consultations` | 保存咨询结果 |
-| 跟进中 | `follow_up` | `follow_up_records` | 保存跟进记录 |
-| 已关闭 | `closed` | `cases` | 写入 closed_at |
+| 跟进中 | `follow_up` | `case_follow_ups` | 保存顾问跟进记录 |
+| 未成交转资源库 | `nurturing` | `case_follow_ups` | 写入未成交原因并转资源库 |
+| 成交关闭 | `closed` | `cases`, `case_follow_ups` | 写入成交结论与 closed_at |
 
 ---
 
 ## 4. 推荐的最小数据库主线
 
-如果第一版保留最小够用且可扩展的结构，我建议先做这 14 张：
+如果第一版保留最小够用且可扩展的结构，我建议先做这 15 张：
 
 1. `users`
 2. `user_profiles`
@@ -380,8 +392,9 @@
 10. `diagnostic_results`
 11. `reports`
 12. `consultation_requests`
-13. `consultations`
-14. `follow_up_records`
+13. `admin_follow_up_records`
+14. `consultant_assignments`
+15. `case_follow_ups`
 
 ### 为什么这样配
 因为你已经明确：
@@ -392,13 +405,10 @@
 所以相比“极简 MVP 表数”，这版更适合真实业务落地。
 
 ### 可后续补充的表
-- `consultant_assignments`
 - `report_versions`
 - `audit_logs`
 - `school_match_logs`
 - `permissions`
-
-如果你希望首版顾问分配记录更规范，我建议 `consultant_assignments` 也直接首版上。
 
 ---
 
@@ -412,8 +422,9 @@
 - `questionnaire_responses`
 - `diagnostic_jobs`
 - `reports`
-- `consultations`
-- `follow_up_records`
+- `admin_follow_up_records`
+- `consultant_assignments`
+- `case_follow_ups`
 
 因为它们分别对应：
 - 基础身份
@@ -422,7 +433,7 @@
 - 原始输入
 - 执行过程
 - 输出结果
-- 顾问交付
+- 管理员交接与顾问跟进
 - 后续转化与服务沉淀
 
 ---
@@ -466,7 +477,7 @@
 1. **账户体系单独做，包含用户 / 顾问 / 管理员基础会员体系**
 2. **问卷答案先用 JSON 保存**
 3. **报告先单表 + version 字段**
-4. **follow_up 单独建表**
+4. **case_follow_ups 单独建表**
 
 ---
 

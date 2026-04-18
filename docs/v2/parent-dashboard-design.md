@@ -26,14 +26,13 @@
 
 ## 3. 信息架构
 
-从上到下 6 个区域：
+从上到下 5 个区域：
 
-1. 顶部导航（账号、退出、客服入口）
+1. 顶部导航（账号、开始新诊断、退出）
 2. `Next Action` 主卡（唯一主按钮）
 3. 我的案例列表（按孩子/案例）
 4. 最近案例进展时间线（最近 5-8 条）
 5. 待办与提醒（补资料、排期确认、截止时间）
-6. 历史报告入口（AI 初稿 / 顾问修订版）
 
 ---
 
@@ -62,12 +61,10 @@
 | `admin_following` | 管理员正在与你确认信息 | 查看进展 |
 | `awaiting_user_info` | 需要你补充资料后继续推进 | 去补资料 |
 | `consult_ready_for_assignment` | 案例已满足转顾问条件 | 查看进展 |
-| `consult_assigned` | 顾问已接手，等待排期确认 | 查看咨询安排 |
-| `consult_scheduled` | 咨询已排期，请按时参加 | 查看咨询安排 |
-| `consult_completed` | 咨询已完成，可查看顾问结论 | 查看顾问结论 |
-| `follow_up` | 进入会后跟进阶段 | 查看跟进计划 |
-| `nurturing` | 当前进入培育阶段，后续将持续跟进 | 查看建议 |
-| `closed` | 当前案例已关闭 | 查看归档 |
+| `consult_assigned` | 顾问已接手，正在建立跟进计划 | 查看跟进进展 |
+| `follow_up` | 顾问正在持续跟进你的案例 | 查看跟进计划 |
+| `nurturing` | 当前进入资源库培育阶段，后续将持续跟进 | 查看建议 |
+| `closed` | 当前案例已成交关闭 | 查看归档 |
 
 ---
 
@@ -82,7 +79,10 @@
 - 当前状态：`lead.caseRecord.status`（优先）或 `lead.status`
 - 推荐顾问：`lead.assignment.consultantName`（可选）
 - 最近更新时间：`lead.updatedAt || lead.updated_at`
-- 操作：`查看详情`（跳 `result/[submissionId]`）
+- 操作：
+  - 选中项显示 `已选中`（禁用态）
+  - 非选中项显示 `切换到此案例`
+  - `查看详情`（跳 `result/[submissionId]`）
 
 ### 排序
 `updatedAt` 倒序，最近有动作的案例优先。
@@ -101,15 +101,14 @@
 - 管理员跟进
 - 待补资料（如有）
 - 顾问分配
-- 咨询排期
-- 咨询完成
-- 会后跟进/关闭
+- 顾问跟进
+- 成交关闭 / 转资源库
 
 ### 数据来源
 - `lead.followUps`
 - `lead.adminFollowUpRecord.followUpNotes`
-- `lead.caseRecord.consultationScheduledAt`
-- `lead.caseRecord.consultationCompletedAt`
+- `lead.caseRecord.assignment.assignedAt`
+- `lead.caseRecord.closure.nurturingAt`
 - `lead.caseRecord.closure.closedAt`
 
 ---
@@ -122,8 +121,8 @@
 ### 规则
 只展示最多 3 条，按紧急程度排序：
 1. 补资料待完成（`awaiting_user_info` 且 `missingInfo` 非空）
-2. 咨询时间待确认（`consult_assigned`）
-3. 会后动作待确认（`follow_up`）
+2. 顾问接单待确认（`consult_assigned`）
+3. 顾问跟进反馈待确认（`follow_up`）
 
 ### 展示字段
 - 待办标题
@@ -133,24 +132,12 @@
 
 ---
 
-## 4.5 历史报告区
-
-### 目标
-降低“报告找不到”的流失。
-
-### 展示
-- 当前生效报告（优先展示）
-- 历史版本列表（时间倒序）
-- 标签：`ai_draft` / `consultant_final`
-
----
-
 ## 5. 状态映射与动作边界
 
 ## 5.1 用户可操作状态
 - 可提交咨询意向：`report_viewed` / `admin_following`（按策略可放开）
 - 可补资料：`awaiting_user_info`
-- 只读状态：`consult_scheduled` / `consult_completed` / `closed`
+- 只读状态：`nurturing` / `closed`
 
 ## 5.2 强登录门禁
 以下动作未登录不可操作：
@@ -195,7 +182,6 @@
 2. 待办提醒
 3. 我的案例
 4. 时间线
-5. 历史报告
 
 说明：
 - 主按钮固定满宽

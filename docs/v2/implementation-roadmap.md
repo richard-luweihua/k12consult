@@ -77,46 +77,55 @@
 
 ### Phase 3：管理端工作台升级
 
-目标：让管理员能完成筛选、补资料、转顾问。
+目标：让管理员能完成顾问管理、全量 Case 指派与状态治理。
 
 建议优先处理：
 
-- `app/admin/page.js`
-- `app/admin/leads/[leadId]/page.js`
-- `app/api/leads/[leadId]/route.js`
+- `app/admin/workbench/page.js`
+- `app/admin/consultants/page.js`
+- `app/admin/consultants/[consultantId]/page.js`
+- `app/admin/cases/page.js`
+- `app/admin/cases/[leadId]/page.js`
+- `app/api/admin/consultants/*`
+- `app/api/admin/cases/*`
 
 重点新增：
 
+- 顾问新增/编辑/停用
+- Case 手动/批量/推荐指派
 - 管理员跟进状态流转
 - 补资料标记
 - 培育池标记
 - 转顾问交接摘要
 - 优先级与 SLA 展示
+- 操作审计日志
 
 完成标志：
 
-- 管理员可以独立完成 qualify / nurture / handoff
+- 管理员可以独立完成顾问管理 + 指派 + 状态推进闭环
 
-### Phase 4：顾问端交付升级
+### Phase 4：顾问端执行流升级（简化版）
 
-目标：让顾问接到的是完整交接包，而不只是基础线索详情。
+目标：让顾问只做三件事：接收派单、跟进处理、按结果关闭或转资源库。
 
 建议优先处理：
 
-- `app/advisor/page.js`
-- `app/advisor/leads/[leadId]/page.js`
+- `app/advisor/workbench/page.js`
+- `app/advisor/cases/[leadId]/page.js`
+- `app/advisor/follow-up/page.js`
 - `components/LeadWorkbench.js`
 
 重点新增：
 
-- 交接包摘要视图
-- AI 判定依据摘要
-- 会后行动建议
-- 报告修订版入口
+- 接单状态确认（`consult_assigned`）
+- 跟进记录沉淀（`follow_up`）
+- 成交关闭校验（`closed`）
+- 未成交转资源库校验（`nurturing`）
+- 顾问侧最小字段操作面板
 
 完成标志：
 
-- 顾问可以基于管理端交接直接进入咨询准备
+- 顾问可以独立完成“接单 -> 跟进 -> 成交关闭 / 未成交转资源库”闭环
 
 ### Phase 5：AI 诊断与学校库能力
 
@@ -148,6 +157,61 @@
 3. Phase 2 的用户端咨询闭环
 
 这个顺序最贴合当前仓库，因为现有项目已经有管理端和线索详情页，先补数据和状态流转，能最快把 V2.0 骨架立起来。
+
+### 路由拆分更新（2026-04-18）
+
+为强化职责边界，管理端与顾问端已完成 Phase A 页面拆分：
+
+- 管理员：`/admin/workbench`、`/admin/cases/[id]`、`/admin/nurturing`、`/admin/sla`
+- 顾问：`/advisor/workbench`、`/advisor/cases/[id]`、`/advisor/follow-up`
+
+旧路由 `/admin`、`/advisor` 及原 `leads` 详情入口保留兼容跳转，不影响已有链接和书签。
+
+### 接口拆分更新（2026-04-18）
+
+案例读写接口已按角色拆分：
+
+- 管理员：`/api/admin/cases/[id]`
+- 顾问：`/api/advisor/cases/[id]`
+
+`components/LeadWorkbench.js` 已按工作台上下文切换调用对应接口。
+
+### 二级页面能力填充（2026-04-18）
+
+四个二级页面已从占位升级为可用清单页：
+
+- 管理员：`/admin/nurturing`、`/admin/sla`
+- 顾问：`/advisor/follow-up`
+
+实现要点：
+
+- 均接入 `listLeads()` 实时数据
+- 顾问二级页面沿用顾问权限过滤，只展示本人可见案例（管理员视角可看全部）
+- 管理员二级页面补齐培育池、首次联系 SLA、补资料超时等核心运营视图
+
+### 顾问执行流简化（2026-04-18）
+
+顾问系统按新决策收敛为三步：
+
+1. 接收管理员派单（`consult_assigned`）
+2. 跟进处理（`follow_up`）
+3. 处理完成后：
+   - 成交：`closed`
+   - 未成交：`nurturing`（资源库）
+
+第一版不再把“报告修订”作为顾问主流程必选动作。
+
+### 管理员三模块升级（2026-04-18）
+
+管理员系统后续迭代拆为三条并行主线：
+
+1. 顾问管理（增删改停用、负载与产能）
+2. Case 总览与指派（手动、推荐、批量）
+3. Case 状态治理（状态机约束、时间线、审计）
+
+详细设计文档：
+
+- `admin-management-system-design.md`
 
 ## 对应文档
 

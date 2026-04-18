@@ -180,7 +180,7 @@
 - `submitted_at`
 
 #### 更新 `cases`
-- `status = consult_pending`
+- `status = consult_intent_submitted`
 
 ### 建议展示字段
 - 当前案例基础信息
@@ -226,42 +226,38 @@
 
 ## 3.1 顾问案例列表页
 ### 页面目标
-- 快速筛选和处理待跟进案例
+- 快速接收管理员派单并进入处理
 
 ### 对应字段
 #### 来自 `cases`
 - `case_no`
 - `status`
-- `source_channel`
-- `created_at`
 - `assigned_consultant_id`
+- `updated_at`
 
 #### 来自 `students`
 - `child_name`
 - `current_grade_raw`
-- `current_city`
 
 #### 来自 `users` / `user_profiles`
 - 家长姓名
 - 联系方式
 
-#### 来自 `consultation_requests`
-- `submitted_at`
-- `request_status`
+#### 来自 `admin_follow_up_records`
+- `handoff_summary`
+- `intent_level`
+- `budget_level`
 
 ### 建议筛选条件
 - 按状态筛选
-- 按顾问筛选
-- 按年级筛选
-- 按提交时间筛选
-- 按来源渠道筛选
+- 按最近更新时间筛选
 
 ---
 
 ## 3.2 顾问案例详情页
 ### 页面目标
 - 一页看懂这个案例
-- 准备咨询
+- 快速执行跟进与关单
 
 ### 应展示字段
 #### 基础信息区
@@ -269,100 +265,45 @@
 - 联系方式
 - 孩子姓名
 - 当前年级
-- 当前城市
-- 当前学校
 
-#### 问卷信息区
-- `questionnaire_responses.response_json`
-
-#### AI 诊断区
-- `reports.content_markdown`
-- `reports.summary_json`
-
-#### 结构化依据区
-- `diagnostic_results.rule_result_json`
-- `diagnostic_results.risk_tags_json`
-- `diagnostic_results.path_tags_json`
-- `diagnostic_results.school_match_hint_json`
-
-#### 咨询申请区
-- `consultation_requests.contact_time_preference`
-- `consultation_requests.notes`
+#### 管理员交接区
+- `admin_follow_up_records.handoff_summary`
+- `admin_follow_up_records.intent_level`
+- `admin_follow_up_records.budget_level`
+- `admin_follow_up_records.missing_info`
 
 #### 顾问操作区
 - 顾问备注输入框
-- 修改状态按钮
-- 生成正式版报告入口
-- 创建咨询记录入口
-
----
-
-## 3.3 报告修订页
-### 页面目标
-- 基于 AI 报告形成顾问正式版
-
-### 对应字段
-#### 读取
-- `reports.content_markdown`（AI draft）
-- `reports.summary_json`
-
-#### 写入
-- 新建一条 `reports`
-  - `report_type = consultant_final`
-  - `report_version + 1`
-  - `is_current = true`
-  - `created_by_user_id = 当前顾问`
-
-### 页面建议
-- 左侧 AI 草稿
-- 右侧顾问修订版
-- 支持保存草稿 / 发布正式版
-
----
-
-## 3.4 咨询记录页
-### 页面目标
-- 记录咨询结果
-- 输出最终建议
-
-### 对应字段
-#### 写入 `consultations`
-- `scheduled_at`
-- `completed_at`
-- `consultation_status`
-- `notes_markdown`
-- `final_advice_json`
-
-#### 更新 `cases`
-- `status = consult_completed`
-
-### 页面建议区块
-- 咨询基本信息
-- 核心结论
-- 学校范围建议
-- 申请顺序建议
-- 风险提醒
 - 下一步动作
+- 成交结论（成交关闭时必填）
+- 未成交原因（转资源库时必填）
+- 状态推进按钮：
+  - `consult_assigned`
+  - `follow_up`
+  - `closed`
+  - `nurturing`（资源库）
 
 ---
 
-## 3.5 跟进记录页
+## 3.3 跟进清单页（可选）
 ### 页面目标
-- 管理咨询后的 7-14 天跟进期
+- 聚合“跟进中”与“待关闭/待转资源库”的顾问任务
 
 ### 对应字段
-#### 写入 `follow_up_records`
-- `follow_up_type`
-- `content`
-- `next_action`
+#### 来自 `cases`
+- `status`（`follow_up` / `closed` / `nurturing`）
+- `updated_at`
 
-#### 更新 `cases`
-- `status = follow_up / closed`
+#### 来自 `case_follow_ups`
+- `note`
+- `next_action`
+- `created_at`
 
 ### 页面建议功能
 - 新增跟进记录
-- 查看历史跟进
-- 关闭案例
+- 查看最近跟进
+- 快速关闭案例
+- 快速转入资源库
 
 ---
 
@@ -509,9 +450,9 @@
 
 ## 5.2 顾问端
 ### 可看
-- 自己负责的案例全量业务字段
-- AI 报告及结构化判断依据
-- 用户预约与跟进记录
+- 自己负责的案例执行字段
+- 管理员交接摘要
+- 本案例跟进记录
 
 ### 不可看
 - 全量后台配置
@@ -532,12 +473,12 @@
 
 ## 6. 我建议下一步继续细化的两个方向
 
-1. **顾问工作台页面结构设计**
-2. **管理后台页面结构设计**
+1. **管理员端页面字段与审计字段细化**
+2. **顾问端“接单-跟进-关闭”状态约束细化**
 
 原因：
 - 用户端逻辑已经比较清楚
-- 现在最需要定的是顾问和管理员如何高效操作
+- 现在最需要定的是状态约束和字段闭环是否完整
 
 ---
 
@@ -545,10 +486,9 @@
 
 下一步最适合继续做：
 
-**顾问工作台页面结构设计**
+**顾问端状态约束与字段校验设计**
 
 因为它直接决定：
 - 顾问效率
-- 咨询准备体验
-- AI 报告和人工交付如何衔接
-- 后续后台字段怎么真正被使用起来
+- 关单质量
+- 审计可追溯性
