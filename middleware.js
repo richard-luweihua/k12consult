@@ -1,18 +1,38 @@
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, hasAdminAuthConfig, verifyAdminSessionToken } from "./lib/admin-auth";
-import { absoluteAppUrl, stripBasePath } from "./lib/paths";
+import { appPath, stripBasePath } from "./lib/paths";
 import { USER_SESSION_COOKIE, verifyUserSessionToken } from "./lib/user-auth";
 
 function isProtectedApi(pathname) {
-  return pathname.startsWith("/api/leads/") || pathname.startsWith("/api/notifications/");
+  return (
+    pathname.startsWith("/api/leads/") ||
+    pathname.startsWith("/api/admin/consultants") ||
+    pathname.startsWith("/api/admin/cases") ||
+    pathname.startsWith("/api/admin/cases/") ||
+    pathname.startsWith("/api/advisor/cases/") ||
+    pathname.startsWith("/api/results/") ||
+    pathname.startsWith("/api/notifications/")
+  );
+}
+
+function isResultsApi(pathname) {
+  return pathname.startsWith("/api/results/");
 }
 
 function canAccessAdvisorWorkspace(session) {
-  return Boolean(session && ["consultant", "admin"].includes(session.role));
+  return Boolean(session && ["consultant", "admin", "super_admin"].includes(session.role));
 }
 
 function canAccessAdminWorkspace(session) {
-  return Boolean(session && session.role === "admin");
+  return Boolean(session && ["admin", "super_admin"].includes(session.role));
+}
+
+function buildRedirectUrl(request, targetPath) {
+  const url = request.nextUrl.clone();
+  const parsed = new URL(targetPath, "http://localhost");
+  url.pathname = appPath(parsed.pathname);
+  url.search = parsed.search;
+  return url;
 }
 
 export async function middleware(request) {
@@ -27,16 +47,17 @@ export async function middleware(request) {
   ]);
   const advisorAuthenticated = authenticated || canAccessAdvisorWorkspace(userSession);
   const adminAuthenticated = authenticated || canAccessAdminWorkspace(userSession);
+  const userAuthenticated = authenticated || Boolean(userSession);
 
   if (pathname === "/advisor/login" || pathname === "/advisor/register") {
     if (advisorAuthenticated) {
       const nextPath = request.nextUrl.searchParams.get("next");
 
       if (nextPath?.startsWith("/admin") && adminAuthenticated) {
-        return NextResponse.redirect(absoluteAppUrl(nextPath, request.url));
+        return NextResponse.redirect(buildRedirectUrl(request, nextPath));
       }
 
-      return NextResponse.redirect(absoluteAppUrl("/advisor", request.url));
+      return NextResponse.redirect(buildRedirectUrl(request, "/advisor/workbench"));
     }
 
     return NextResponse.next();
@@ -44,12 +65,10 @@ export async function middleware(request) {
 
   if (pathname === "/admin/login") {
     if (adminAuthenticated) {
-      return NextResponse.redirect(absoluteAppUrl("/admin", request.url));
+      return NextResponse.redirect(buildRedirectUrl(request, "/admin/workbench"));
     }
 
-    const loginUrl = absoluteAppUrl("/advisor/login", request.url);
-    loginUrl.searchParams.set("next", "/admin");
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
   }
 
   if (pathname.startsWith("/admin")) {
@@ -58,10 +77,10 @@ export async function middleware(request) {
     }
 
     if (advisorAuthenticated) {
-      return NextResponse.redirect(absoluteAppUrl("/advisor", request.url));
+      return NextResponse.redirect(buildRedirectUrl(request, "/advisor/workbench"));
     }
 
-    const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+    const loginUrl = buildRedirectUrl(request, "/admin/login");
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
@@ -71,6 +90,30 @@ export async function middleware(request) {
   }
 
   if (isProtectedApi(pathname)) {
+    if (isResultsApi(pathname) && userAuthenticated) {
+      return NextResponse.next();
+    }
+
+    if ((pathname.startsWith("/api/admin/cases") || pathname.startsWith("/api/admin/consultants")) && !adminAuthenticated) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "请先登录管理台"
+        },
+        { status: 401 }
+      );
+    }
+
+    if (pathname.startsWith("/api/advisor/cases/") && !advisorAuthenticated) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "请先登录顾问工作台"
+        },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,
@@ -80,9 +123,9 @@ export async function middleware(request) {
     );
   }
 
-  const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+  const loginUrl = buildRedirectUrl(request, "/advisor/login");
 
-  if (pathname !== "/advisor") {
+  if (pathname !== "/advisor/workbench") {
     loginUrl.searchParams.set("next", `${pathname}${search}`);
   }
 
@@ -90,5 +133,16 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/advisor/:path*", "/api/leads/:path*", "/api/notifications/:path*"]
+  matcher: [
+    "/admin/:path*",
+    "/advisor/:path*",
+    "/api/leads/:path*",
+    "/api/admin/consultants",
+    "/api/admin/consultants/:path*",
+    "/api/admin/cases",
+    "/api/admin/cases/:path*",
+    "/api/advisor/cases/:path*",
+    "/api/results/:path*",
+    "/api/notifications/:path*"
+  ]
 };

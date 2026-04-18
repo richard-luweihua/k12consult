@@ -11,11 +11,9 @@ const v2FlowStatuses = [
   ["awaiting_user_info", "待补资料"],
   ["consult_ready_for_assignment", "可转顾问"],
   ["consult_assigned", "已转顾问"],
-  ["consult_scheduled", "咨询已排期"],
-  ["consult_completed", "咨询已完成"],
-  ["follow_up", "咨询后跟进"],
+  ["follow_up", "顾问跟进中"],
   ["nurturing", "进入培育池"],
-  ["closed", "案例关闭"]
+  ["closed", "成交关闭"]
 ];
 const adminFlowStatuses = [
   "report_viewed",
@@ -27,7 +25,7 @@ const adminFlowStatuses = [
   "nurturing",
   "closed"
 ];
-const advisorFlowStatuses = ["consult_assigned", "consult_scheduled", "consult_completed", "follow_up", "closed"];
+const advisorFlowStatuses = ["consult_assigned", "follow_up", "nurturing", "closed"];
 const v2FlowStatusLabelMap = Object.fromEntries(v2FlowStatuses);
 const v2FlowNoteTemplates = {
   report_viewed: "用户已查看报告，等待进一步确认咨询意向。",
@@ -36,11 +34,9 @@ const v2FlowNoteTemplates = {
   awaiting_user_info: "已联系家长，等待补充关键资料后再进入下一步判断。",
   consult_ready_for_assignment: "关键信息已齐备，案例满足转顾问条件，建议安排顾问接手。",
   consult_assigned: "已完成顾问分配，后续由顾问推进首咨与行动计划。",
-  consult_scheduled: "已确认咨询时间并完成排期，等待顾问进行正式咨询。",
-  consult_completed: "正式咨询已完成，顾问输出已沉淀，进入会后动作阶段。",
-  follow_up: "当前处于咨询后跟进阶段，持续推进后续决策与落地动作。",
+  follow_up: "顾问已接单并进入持续跟进阶段。",
   nurturing: "当前不进入正式咨询，已转入培育池并安排后续触达节奏。",
-  closed: "本案例已关闭，后续如用户有新需求可重新激活。"
+  closed: "案例已成交关闭，后续如用户有新需求可重新激活。"
 };
 const intentLevels = [
   ["high", "高意愿"],
@@ -140,6 +136,7 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
   const initialConsultationSummary = lead.caseRecord?.consultationSummary || {};
   const initialPostConsultation = lead.caseRecord?.postConsultation || {};
   const initialClosure = lead.caseRecord?.closure || {};
+  const initialNurturing = lead.caseRecord?.nurturing || {};
   const [status, setStatus] = useState(lead.status);
   const [v2Status, setV2Status] = useState(initialV2Status);
   const [assignedConsultantId, setAssignedConsultantId] = useState(lead.assignedConsultantId ?? "");
@@ -165,6 +162,8 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
   const [followUpOwner, setFollowUpOwner] = useState(initialPostConsultation.owner || "");
   const [closeReason, setCloseReason] = useState(initialClosure.reason || "");
   const [closeNote, setCloseNote] = useState(initialClosure.note || "");
+  const [nurturingReason, setNurturingReason] = useState(initialNurturing.reason || "");
+  const [nurturingNextAction, setNurturingNextAction] = useState(initialNurturing.nextAction || "");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -174,7 +173,8 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
     setMessage("");
 
     try {
-      const response = await fetch(apiPath(`/api/leads/${lead.id}`), {
+      const endpoint = isAdminWorkspace ? `/api/admin/cases/${lead.id}` : `/api/advisor/cases/${lead.id}`;
+      const response = await fetch(apiPath(endpoint), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"
@@ -214,12 +214,12 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
     });
   }
 
-  function hasConsultationSummaryReady() {
-    return Boolean(consultationFinalPath.trim() && consultationNextAction.trim());
-  }
-
   function hasCloseReasonReady() {
     return Boolean(closeReason.trim());
+  }
+
+  function hasNurturingReady() {
+    return Boolean(nurturingReason.trim() && nurturingNextAction.trim());
   }
 
   return (
@@ -236,13 +236,13 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
               type="button"
               disabled={saving}
               onClick={() => {
-                if (!isAdminWorkspace && key === "consult_completed" && !hasConsultationSummaryReady()) {
-                  setMessage("请先补全咨询结论中的“最终路径建议”和“3个月第一步动作”，再标记咨询完成。");
+                if (key === "closed" && !hasCloseReasonReady()) {
+                  setMessage("请先填写成交结论，再标记成交关闭。");
                   return;
                 }
 
-                if (key === "closed" && !hasCloseReasonReady()) {
-                  setMessage("请先填写案例关闭原因，再标记关闭。");
+                if (key === "nurturing" && !hasNurturingReady()) {
+                  setMessage("请先填写未成交原因和后续培育动作，再转入资源库。");
                   return;
                 }
 
@@ -256,7 +256,9 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
                     followUpNextStep,
                     followUpOwner,
                     closeReason,
-                    closeNote
+                    closeNote,
+                    nurturingReason,
+                    nurturingNextAction
                   },
                   `V2 状态已更新为「${label}」。`
                 );
@@ -398,7 +400,7 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
                     adminInternalNotes,
                     slaStatus,
                     firstContactAt: toIsoStringOrEmpty(firstContactAt),
-                    markQualified: ["consult_ready_for_assignment", "consult_assigned", "consult_scheduled", "consult_completed"].includes(v2Status)
+                    markQualified: ["consult_ready_for_assignment", "consult_assigned", "follow_up", "closed"].includes(v2Status)
                   },
                   "管理员跟进字段已保存。"
                 )
@@ -413,7 +415,7 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
       {!isAdminWorkspace ? (
         <section className="card advisor-action-card">
           <p className="eyebrow">Consultation Output</p>
-          <h3>沉淀咨询结论，供会后跟进与交付使用。</h3>
+          <h3>沉淀关键判断，供后续跟进与收口使用。</h3>
           <div className="control-stack">
             <label className="field-block">
               <span className="field-label">咨询时间（可选）</span>
@@ -505,11 +507,11 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
       ) : null}
 
       <section className="card advisor-action-card">
-        <p className="eyebrow">Post-Consultation</p>
-        <h3>{isAdminWorkspace ? "用于补充关闭原因或会后情况。" : "会后跟进信息决定案例如何收口。"}</h3>
+        <p className="eyebrow">Outcome</p>
+        <h3>{isAdminWorkspace ? "用于补充收口字段与状态决策。" : "跟进结果决定案例收口方向。"} </h3>
         <div className="control-stack">
           <label className="field-block">
-            <span className="field-label">会后跟进摘要</span>
+            <span className="field-label">跟进摘要</span>
             <textarea
               className="text-area"
               rows={3}
@@ -542,9 +544,9 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
           </label>
 
           <label className="field-block">
-            <span className="field-label">关闭原因（关闭时必填）</span>
+            <span className="field-label">成交结论（标记 closed 必填）</span>
             <select className="select-input" value={closeReason} onChange={(event) => setCloseReason(event.target.value)}>
-              <option value="">请选择关闭原因</option>
+              <option value="">请选择成交结论</option>
               {closeReasonOptions.map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -554,13 +556,35 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
           </label>
 
           <label className="field-block">
-            <span className="field-label">关闭备注</span>
+            <span className="field-label">成交备注</span>
             <textarea
               className="text-area"
               rows={3}
               value={closeNote}
               onChange={(event) => setCloseNote(event.target.value)}
               placeholder="补充关闭背景，便于后续复盘。"
+            />
+          </label>
+
+          <label className="field-block">
+            <span className="field-label">未成交原因（标记 nurturing 必填）</span>
+            <textarea
+              className="text-area"
+              rows={3}
+              value={nurturingReason}
+              onChange={(event) => setNurturingReason(event.target.value)}
+              placeholder="例如：预算窗口未匹配/家庭决策延后。"
+            />
+          </label>
+
+          <label className="field-block">
+            <span className="field-label">后续培育动作（标记 nurturing 必填）</span>
+            <textarea
+              className="text-area"
+              rows={3}
+              value={nurturingNextAction}
+              onChange={(event) => setNurturingNextAction(event.target.value)}
+              placeholder="例如：3 周后回访，补充学校梯队调整建议。"
             />
           </label>
 
@@ -575,13 +599,15 @@ export function LeadWorkbench({ lead, consultants, workspace = "advisor" }) {
                   followUpNextStep,
                   followUpOwner,
                   closeReason,
-                  closeNote
+                  closeNote,
+                  nurturingReason,
+                  nurturingNextAction
                 },
-                "会后跟进信息已保存。"
+                "收口信息已保存。"
               )
             }
           >
-            保存会后跟进信息
+            保存收口信息
           </button>
         </div>
       </section>

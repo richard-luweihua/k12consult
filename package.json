@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "verify:login": "node scripts/verify-login-flow.mjs"
+    "test": "node --test tests/**/*.test.js",
+    "verify:login": "node scripts/verify-login-flow.mjs",
+    "verify:case-flow": "node scripts/verify-admin-advisor-case-flow.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
