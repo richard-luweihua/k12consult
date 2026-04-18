@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getLead, updateLead } from "../../../../../lib/data.js";
-import { getSessionUserFromRequest } from "../../../../../lib/user-service.js";
+import { canActorViewLead, resolveActorFromRequest, sanitizeLeadForActor } from "../../../../../lib/lead-access";
 
 function resolveCurrentV2Status(lead) {
   return lead.caseRecord?.status || lead.adminFollowUpRecord?.status || "report_viewed";
@@ -18,9 +18,9 @@ function normalizeProvidedItems(value) {
 
 export async function POST(request, { params }) {
   try {
-    const user = await getSessionUserFromRequest(request);
+    const actor = await resolveActorFromRequest(request);
 
-    if (!user) {
+    if (!actor.role) {
       return NextResponse.json({ ok: false, message: "请先登录后再补充资料。" }, { status: 401 });
     }
 
@@ -33,10 +33,8 @@ export async function POST(request, { params }) {
     }
 
     const lead = bundle.lead;
-    const isOwner = lead.userId === user.id || lead.user_id === user.id || lead.answers?.userId === user.id;
-    const isOperator = user.role === "admin" || user.role === "consultant";
 
-    if (!isOwner && !isOperator) {
+    if (!canActorViewLead(actor, lead)) {
       return NextResponse.json({ ok: false, message: "你没有权限补充这个案例的资料。" }, { status: 403 });
     }
 
@@ -69,7 +67,7 @@ export async function POST(request, { params }) {
 
     return NextResponse.json({
       ok: true,
-      lead: updatedLead
+      lead: sanitizeLeadForActor(actor, updatedLead)
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "提交补资料失败";

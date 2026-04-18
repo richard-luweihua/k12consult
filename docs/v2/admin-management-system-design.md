@@ -128,7 +128,7 @@
 ### 5.2 关键流转约束
 
 1. 进入 `consult_assigned` 前必须有 `assignedConsultantId`
-2. 进入 `follow_up` 前必须至少有 1 条顾问跟进记录
+2. 进入 `follow_up` 前必须至少有 1 条顾问跟进记录（系统自动日志或管理员备注不计入）
 3. 进入 `closed`（成交）前必须填写成交结论
 4. 进入 `nurturing`（资源库）前必须填写未成交原因与后续建议
 5. `awaiting_user_info` 超过 7 天进入 SLA 异常池（人工决策是否转培育）

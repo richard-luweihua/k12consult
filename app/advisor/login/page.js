@@ -6,7 +6,7 @@ import { apiPath, appPath } from "../../../lib/paths";
 import { USER_SESSION_COOKIE, verifyUserSessionToken } from "../../../lib/user-auth";
 
 function canAccessAdvisor(session) {
-  return Boolean(session && ["consultant", "admin"].includes(session.role));
+  return Boolean(session && ["consultant", "admin", "super_admin"].includes(session.role));
 }
 
 export const metadata = {
@@ -23,13 +23,13 @@ export default async function AdvisorLoginPage({ searchParams }) {
   ]);
 
   if (adminAuthenticated || canAccessAdvisor(userSession)) {
-    redirect(appPath("/advisor"));
+    redirect(appPath("/advisor/workbench"));
   }
 
   const params = await searchParams;
   const error = params?.error;
   const loggedOut = params?.logged_out;
-  const next = params?.next || "/advisor";
+  const next = params?.next || "/advisor/workbench";
 
   return (
     <main className="page-shell auth-shell">

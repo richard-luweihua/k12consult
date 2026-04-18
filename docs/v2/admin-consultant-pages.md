@@ -172,7 +172,9 @@
   - `/admin/nurturing` 已接入真实数据，支持查看培育时长、最近备注、快速回到案例并重新激活
   - `/admin/sla` 已接入两类异常清单：首次联系超时、待补资料超 7 天
 - 顾问：
-  - `/advisor/follow-up` 已接入跟进任务清单，聚焦“处理中”与“待关闭/待转资源库”
+  - `/advisor/follow-up` 已接入跟进任务清单，聚焦“跟进中（follow_up）”与“待启动跟进（consult_assigned）”
+  - `/advisor/schedule` 统一使用 `consult_assigned / follow_up` 两类顾问态进行排期展示
+  - 顾问推进到 `follow_up` 前需存在至少 1 条顾问跟进记录（系统自动日志不计入）
 
 说明：当前已完成 Phase A 路由拆分 + Phase B 案例接口拆分 + Phase C 二级页面能力填充；顾问端按“接单-跟进-成交关闭/未成交转资源库”执行。
 

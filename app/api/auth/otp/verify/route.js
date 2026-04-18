@@ -5,12 +5,22 @@ import {
   hasUserAuthConfig,
   USER_SESSION_COOKIE
 } from "../../../../../lib/user-auth.js";
-import { getOrCreateMockUserByMobile, verifyOtpChallenge } from "../../../../../lib/otp-auth.js";
+import { getOrCreateMockUserByMobile, isOtpMockEnabled, verifyOtpChallenge } from "../../../../../lib/otp-auth.js";
 
 export async function POST(request) {
   try {
     if (!hasUserAuthConfig()) {
       return NextResponse.json({ ok: false, message: "用户认证尚未配置完成" }, { status: 503 });
+    }
+
+    if (!isOtpMockEnabled()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "当前环境未配置短信验证码通道，暂不支持手机号验证码登录。"
+        },
+        { status: 503 }
+      );
     }
 
     const body = await request.json().catch(() => ({}));

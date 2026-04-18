@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listAssignedLeadsForConsultant } from "../../../lib/data.js";
+import { sanitizeLeadForActor } from "../../../lib/lead-access.js";
 import { getSessionUserFromRequest } from "../../../lib/user-service.js";
 
 export async function GET(request) {
@@ -10,12 +11,17 @@ export async function GET(request) {
       return NextResponse.json({ ok: false, message: "请先登录" }, { status: 401 });
     }
 
-    if (!["consultant", "admin"].includes(user.role)) {
+    if (!["consultant", "admin", "super_admin"].includes(user.role)) {
       return NextResponse.json({ ok: false, message: "无权限访问" }, { status: 403 });
     }
 
     const consultantKey = user.consultant_id || user.consultantId || user.id;
-    const leads = await listAssignedLeadsForConsultant(consultantKey);
+    const actor = {
+      role: user.role,
+      userId: user.id,
+      consultantKey
+    };
+    const leads = (await listAssignedLeadsForConsultant(consultantKey)).map((lead) => sanitizeLeadForActor(actor, lead));
     return NextResponse.json({ ok: true, leads });
   } catch (error) {
     return NextResponse.json(

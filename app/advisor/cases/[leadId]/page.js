@@ -130,7 +130,7 @@ export default async function AdvisorLeadDetailPage({ params }) {
         <article className="card advisor-summary-card">
           <span>推荐顾问</span>
           <strong>{lead.assignment.consultantName}</strong>
-          <small>可在下方直接改派</small>
+          <small>如需改派请联系管理员</small>
         </article>
         <article className="card advisor-summary-card">
           <span>最近更新时间</span>

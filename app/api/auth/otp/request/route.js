@@ -8,6 +8,16 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, message: "用户认证尚未配置完成" }, { status: 503 });
     }
 
+    if (!isOtpMockEnabled()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "当前环境未配置短信验证码通道，暂不支持手机号验证码登录。"
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const mobile = typeof body.mobile === "string" ? body.mobile : "";
     const purpose = typeof body.purpose === "string" ? body.purpose : "login";

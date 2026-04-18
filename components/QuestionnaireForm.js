@@ -29,6 +29,7 @@ export function QuestionnaireForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [draftRestored, setDraftRestored] = useState(false);
+  const [draftHydrated, setDraftHydrated] = useState(false);
   const resumeMode = searchParams.get("resume") === "1";
 
   const progress = useMemo(() => {
@@ -48,6 +49,7 @@ export function QuestionnaireForm() {
     const raw = window.localStorage.getItem(QUESTIONNAIRE_DRAFT_KEY);
 
     if (!raw) {
+      setDraftHydrated(true);
       return;
     }
 
@@ -71,16 +73,18 @@ export function QuestionnaireForm() {
       setDraftRestored(true);
     } catch {
       window.localStorage.removeItem(QUESTIONNAIRE_DRAFT_KEY);
+    } finally {
+      setDraftHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !draftHydrated) {
       return;
     }
 
     window.localStorage.setItem(QUESTIONNAIRE_DRAFT_KEY, JSON.stringify(formData));
-  }, [formData]);
+  }, [draftHydrated, formData]);
 
   function updateValue(name, value) {
     setFormData((current) => ({ ...current, [name]: value }));
@@ -105,7 +109,14 @@ export function QuestionnaireForm() {
 
     if (!user) {
       setError("请先登录后再提交，我们会保留你已填写的内容。");
-      const nextPath = appPath("/questionnaire?resume=1");
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(QUESTIONNAIRE_DRAFT_KEY, JSON.stringify(formData));
+      }
+
+      const nextQuery = new URLSearchParams(searchParams.toString());
+      nextQuery.set("resume", "1");
+      const nextPath = appPath(`/questionnaire?${nextQuery.toString()}`);
       router.push(appPath(`/login?next=${encodeURIComponent(nextPath)}`));
       return;
     }

@@ -74,11 +74,23 @@ test("assertCaseTransitionRequirements should require at least one follow-up bef
     ValidationError
   );
 
+  assert.throws(
+    () =>
+      assertCaseTransitionRequirements({
+        nextStatus: "follow_up",
+        payload: {
+          existingFollowUps: [{ id: "f0", author: "系统", note: "自动建档" }]
+        },
+        currentCaseRecord: {}
+      }),
+    ValidationError
+  );
+
   assert.doesNotThrow(() =>
     assertCaseTransitionRequirements({
       nextStatus: "follow_up",
       payload: {
-        existingFollowUps: [{ id: "f1", note: "历史跟进" }]
+        existingFollowUps: [{ id: "f1", author: "Ryan", note: "已和家长确认首咨时间" }]
       },
       currentCaseRecord: {}
     })

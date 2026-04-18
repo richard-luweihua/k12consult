@@ -27,11 +27,6 @@ const missingInfoLabelMap = {
   address_proof: '住址证明'
 };
 
-const reportTypeLabelMap = {
-  ai_draft: 'AI 初稿',
-  consultant_final: '顾问定稿'
-};
-
 function isInternalRole(role) {
   return ['consultant', 'admin', 'super_admin'].includes(role);
 }
@@ -342,32 +337,6 @@ function buildTimelineEvents(lead) {
   return events.slice(0, 8);
 }
 
-function buildReportHistory(lead) {
-  const versions = [];
-
-  if (lead?.currentReport) {
-    versions.push(lead.currentReport);
-  }
-
-  if (Array.isArray(lead?.reportVersions)) {
-    versions.push(...lead.reportVersions);
-  }
-
-  const uniqueByKey = new Map();
-  for (const report of versions) {
-    if (!report) {
-      continue;
-    }
-
-    const key = `${report.reportVersion || 'none'}-${report.reportType || 'unknown'}-${report.createdAt || 'none'}`;
-    if (!uniqueByKey.has(key)) {
-      uniqueByKey.set(key, report);
-    }
-  }
-
-  return [...uniqueByKey.values()].sort((left, right) => toTimestamp(right.createdAt) - toTimestamp(left.createdAt));
-}
-
 export default function DashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const router = useRouter();
@@ -392,7 +361,6 @@ export default function DashboardPage() {
   const nextAction = activeLead ? buildNextAction(activeLead) : null;
   const reminders = activeLead ? buildReminderItems(activeLead) : [];
   const timelineEvents = activeLead ? buildTimelineEvents(activeLead) : [];
-  const reports = activeLead ? buildReportHistory(activeLead) : [];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -501,9 +469,6 @@ export default function DashboardPage() {
           <Link className="secondary-button" href={appPath('/questionnaire')}>
             开始新诊断
           </Link>
-          <a className="secondary-button" href="mailto:service@k12consult.hk">
-            联系客服
-          </a>
           <button className="secondary-button" type="button" onClick={handleSignOut}>
             退出登录
           </button>
@@ -620,9 +585,15 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="parent-actions">
-                    <button className="secondary-button" type="button" onClick={() => setActiveLeadId(lead.id)}>
-                      {isActive ? '当前案例' : '切换到此案例'}
-                    </button>
+                    {isActive ? (
+                      <button className="secondary-button" type="button" disabled aria-current="true">
+                        已选中
+                      </button>
+                    ) : (
+                      <button className="secondary-button" type="button" onClick={() => setActiveLeadId(lead.id)}>
+                        切换到此案例
+                      </button>
+                    )}
                     <Link className="secondary-button" href={appPath(`/result/${lead.id}`)}>
                       查看详情
                     </Link>
@@ -659,33 +630,6 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <section className="card parent-section-card">
-        <div className="parent-section-head">
-          <div>
-            <p className="eyebrow">Reports</p>
-            <h2>历史报告</h2>
-          </div>
-        </div>
-
-        {!activeLead || reports.length === 0 ? (
-          <p className="inline-note">当前案例暂无可查看的报告版本。</p>
-        ) : (
-          <div className="parent-report-list">
-            {reports.map((report, index) => (
-              <article className="parent-report-item" key={`${report.reportVersion || 'none'}-${report.createdAt || index}`}>
-                <div className="parent-report-meta">
-                  <span className="status-pill">{reportTypeLabelMap[report.reportType] || report.reportType || '报告版本'}</span>
-                  <span className="inline-note">{formatDateTime(report.createdAt)}</span>
-                </div>
-                <p className="parent-case-meta">版本号：{report.reportVersion || index + 1}</p>
-                <Link className="secondary-button" href={appPath(`/result/${activeLead.id}`)}>
-                  打开报告
-                </Link>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
     </main>
   );
 }

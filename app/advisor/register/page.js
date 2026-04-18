@@ -7,7 +7,7 @@ import { apiPath, appPath } from "../../../lib/paths";
 import { USER_SESSION_COOKIE, hasAdvisorInviteConfig, verifyUserSessionToken } from "../../../lib/user-auth";
 
 function canAccessAdvisor(session) {
-  return Boolean(session && ["consultant", "admin"].includes(session.role));
+  return Boolean(session && ["consultant", "admin", "super_admin"].includes(session.role));
 }
 
 export const metadata = {
@@ -24,7 +24,7 @@ export default async function AdvisorRegisterPage({ searchParams }) {
   ]);
 
   if (adminAuthenticated || canAccessAdvisor(userSession)) {
-    redirect(appPath("/advisor"));
+    redirect(appPath("/advisor/workbench"));
   }
 
   const params = await searchParams;

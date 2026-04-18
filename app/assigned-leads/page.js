@@ -172,7 +172,7 @@ export default function AssignedLeadsPage() {
                         </div>
                         <div className="mt-2 flex items-center text-sm sm:mt-0">
                           <Link
-                            href={`/advisor/leads/${lead.id}`}
+                            href={`/advisor/cases/${lead.id}`}
                             className="text-indigo-600 hover:text-indigo-500"
                           >
                             处理线索 →

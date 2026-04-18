@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listLeadsForUser } from "../../../lib/data.js";
+import { sanitizeLeadForActor } from "../../../lib/lead-access.js";
 import { getSessionUserFromRequest } from "../../../lib/user-service.js";
 
 export async function GET(request) {
@@ -10,7 +11,12 @@ export async function GET(request) {
       return NextResponse.json({ ok: false, message: "请先登录" }, { status: 401 });
     }
 
-    const leads = await listLeadsForUser(user.id);
+    const actor = {
+      role: user.role,
+      userId: user.id,
+      consultantKey: user.consultant_id || user.consultantId || user.id
+    };
+    const leads = (await listLeadsForUser(user.id)).map((lead) => sanitizeLeadForActor(actor, lead));
     return NextResponse.json({ ok: true, leads });
   } catch (error) {
     return NextResponse.json(

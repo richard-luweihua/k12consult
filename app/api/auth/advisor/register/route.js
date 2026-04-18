@@ -42,7 +42,7 @@ export async function POST(request) {
       role: "consultant",
       consultantId
     });
-    const response = NextResponse.redirect(absoluteAppUrl("/advisor", request.url), { status: 303 });
+    const response = NextResponse.redirect(absoluteAppUrl("/advisor/workbench", request.url), { status: 303 });
     response.cookies.set(USER_SESSION_COOKIE, await createUserSessionToken(user), getUserSessionCookieOptions());
     return response;
   } catch {

@@ -12,7 +12,7 @@ export async function POST(request) {
   const formData = await request.formData();
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
-  const next = String(formData.get("next") || "/advisor");
+  const next = String(formData.get("next") || "/advisor/workbench");
 
   if (!hasUserAuthConfig()) {
     return NextResponse.redirect(absoluteAppUrl("/advisor/login?error=config", request.url), { status: 303 });
@@ -21,13 +21,16 @@ export async function POST(request) {
   try {
     const user = await loginUser({ email, password });
 
-    if (!["consultant", "admin"].includes(user.role)) {
+    if (!["consultant", "admin", "super_admin"].includes(user.role)) {
       const loginUrl = absoluteAppUrl("/advisor/login", request.url);
       loginUrl.searchParams.set("error", "role");
       return NextResponse.redirect(loginUrl, { status: 303 });
     }
 
-    const response = NextResponse.redirect(absoluteAppUrl(next.startsWith("/") ? next : "/advisor", request.url), { status: 303 });
+    const response = NextResponse.redirect(
+      absoluteAppUrl(next.startsWith("/") ? next : "/advisor/workbench", request.url),
+      { status: 303 }
+    );
     response.cookies.set(USER_SESSION_COOKIE, await createUserSessionToken(user), getUserSessionCookieOptions());
     return response;
   } catch {
