@@ -33,18 +33,18 @@ export default function HomePage() {
 
         {user ? (
           <Link className="home-v2-primary-btn" href={primaryHref}>
-            开始AI诊断
+            开始规划
           </Link>
         ) : (
           <Suspense
             fallback={
               <a className="home-v2-primary-btn" href={primaryHref}>
-                开始AI诊断
+                开始规划
               </a>
             }
           >
             <AttributionLink className="home-v2-primary-btn" href={primaryHref}>
-              开始AI诊断
+              开始规划
             </AttributionLink>
           </Suspense>
         )}

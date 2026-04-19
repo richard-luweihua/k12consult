@@ -163,10 +163,12 @@ export const metadata = {
 
 export default async function AdminPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
-  const selectedStatus =
+  const requestedStatus =
     typeof resolvedSearchParams?.v2Status === "string" && resolvedSearchParams.v2Status.trim()
       ? resolvedSearchParams.v2Status.trim()
       : "all";
+  const availableFilterKeys = new Set(filterOptions.map(([key]) => key));
+  const selectedStatus = availableFilterKeys.has(requestedStatus) ? requestedStatus : "all";
   const { leads } = await listLeads();
   const leadsWithStatus = leads.map((lead) => ({
     ...lead,
@@ -183,6 +185,7 @@ export default async function AdminPage({ searchParams }) {
   const visibleLeads =
     selectedStatus === "all" ? leadsWithStatus : leadsWithStatus.filter((lead) => lead.v2Status === selectedStatus);
   const selectedStatusLabel = filterOptions.find(([key]) => key === selectedStatus)?.[1] || "当前筛选";
+  const selectedStatusCount = counts[selectedStatus] || 0;
 
   return (
     <main className="page-shell home-shell">
@@ -246,19 +249,47 @@ export default async function AdminPage({ searchParams }) {
             <p className="eyebrow">状态看板</p>
             <h2>按 V2.0 跟进状态筛选案例</h2>
           </div>
-          <span className="inline-note">当前筛选：{selectedStatusLabel}</span>
+          <span className="inline-note">
+            当前筛选：{selectedStatusLabel} · {selectedStatusCount} 条
+          </span>
         </div>
-        <div className="analytics-list">
+
+        <form action="/admin/workbench" className="status-filter-compact" method="get">
+          <label className="field-block">
+            <span className="field-label">选择要查看的案例状态</span>
+            <div className="status-filter-controls">
+              <select className="select-input status-filter-select" defaultValue={selectedStatus} name="v2Status">
+                {filterOptions.map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}（{counts[key] || 0} 条）
+                  </option>
+                ))}
+              </select>
+              <button className="secondary-button" type="submit">
+                查看案例
+              </button>
+              {selectedStatus !== "all" ? (
+                <Link className="secondary-button" href="/admin/workbench">
+                  重置
+                </Link>
+              ) : null}
+            </div>
+          </label>
+        </form>
+
+        <div className="status-chip-scroll" role="list" aria-label="状态快捷筛选">
           {filterOptions.map(([key, label]) => {
             const isActive = key === selectedStatus;
             return (
-              <div className="analytics-row" key={key}>
+              <Link
+                className={isActive ? "status-chip-link status-chip-link--active" : "status-chip-link"}
+                href={linkForFilter(key)}
+                key={key}
+                role="listitem"
+              >
                 <span>{label}</span>
-                <span>{counts[key] || 0} 条</span>
-                <Link className={isActive ? "primary-button" : "secondary-button"} href={linkForFilter(key)}>
-                  {isActive ? "查看中" : "筛选"}
-                </Link>
-              </div>
+                <strong>{counts[key] || 0}</strong>
+              </Link>
             );
           })}
         </div>

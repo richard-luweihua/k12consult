@@ -34,6 +34,10 @@ export function QuestionnaireForm() {
   const [draftHydrated, setDraftHydrated] = useState(false);
   const resumeMode = searchParams.get("resume") === "1";
   const missingFieldSet = useMemo(() => new Set(missingFieldNames), [missingFieldNames]);
+  const validationMessage =
+    missingFieldNames.length > 0
+      ? `仍有 ${missingFieldNames.length} 项必填信息未完成，请先补齐后再生成结果。`
+      : "";
 
   const progress = useMemo(() => {
     const done = requiredFieldNames.filter((fieldName) => isFilled(formData[fieldName])).length;
@@ -138,7 +142,6 @@ export function QuestionnaireForm() {
 
     if (missing.length > 0) {
       setMissingFieldNames(missing);
-      setError(`仍有 ${missing.length} 项必填信息未完成，请先补齐后再生成结果。`);
       requestAnimationFrame(() => scrollToField(missing[0]));
       return;
     }
@@ -316,6 +319,7 @@ export function QuestionnaireForm() {
       ))}
 
       <section className="questionnaire-v2-submit">
+        <p className="questionnaire-v2-submit-status">当前必填完成：{progress.done}/{progress.total}</p>
         {missingFieldNames.length > 0 ? (
           <div aria-live="assertive" className="questionnaire-v2-missing-alert" role="alert">
             <p className="questionnaire-v2-missing-alert-title">请先补齐以下必填项</p>
@@ -333,7 +337,8 @@ export function QuestionnaireForm() {
             </div>
           </div>
         ) : null}
-        {error ? <p className="error-text">{error}</p> : null}
+        {validationMessage ? <p className="error-text">{validationMessage}</p> : null}
+        {!validationMessage && error ? <p className="error-text">{error}</p> : null}
         <button className="questionnaire-v2-submit-btn" disabled={submitting} type="submit">
           {submitting ? "正在生成，请稍候..." : "提交并生成诊断报告"}
         </button>
