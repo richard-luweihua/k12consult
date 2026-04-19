@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { apiPath, appPath } from "@/lib/paths";
-import { formSections, requiredFieldNames } from "../lib/schema";
+import { formSections, getFieldLabel, requiredFieldNames } from "../lib/schema";
 
 const initialState = formSections.flatMap((section) => section.fields).reduce((acc, field) => {
   acc[field.name] = field.type === "checkbox" ? [] : "";
@@ -28,9 +28,11 @@ export function QuestionnaireForm() {
   const [formData, setFormData] = useState(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [missingFieldNames, setMissingFieldNames] = useState([]);
   const [draftRestored, setDraftRestored] = useState(false);
   const [draftHydrated, setDraftHydrated] = useState(false);
   const resumeMode = searchParams.get("resume") === "1";
+  const missingFieldSet = useMemo(() => new Set(missingFieldNames), [missingFieldNames]);
 
   const progress = useMemo(() => {
     const done = requiredFieldNames.filter((fieldName) => isFilled(formData[fieldName])).length;
@@ -86,6 +88,35 @@ export function QuestionnaireForm() {
     window.localStorage.setItem(QUESTIONNAIRE_DRAFT_KEY, JSON.stringify(formData));
   }, [draftHydrated, formData]);
 
+  useEffect(() => {
+    if (missingFieldNames.length === 0) {
+      return;
+    }
+
+    const nextMissing = missingFieldNames.filter((fieldName) => !isFilled(formData[fieldName]));
+
+    if (nextMissing.length !== missingFieldNames.length) {
+      setMissingFieldNames(nextMissing);
+    }
+  }, [formData, missingFieldNames]);
+
+  function scrollToField(fieldName) {
+    if (typeof window === "undefined" || !fieldName) {
+      return;
+    }
+
+    const fieldNode = document.querySelector(`[data-field-name="${fieldName}"]`);
+
+    if (!fieldNode) {
+      return;
+    }
+
+    fieldNode.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
   function updateValue(name, value) {
     setFormData((current) => ({ ...current, [name]: value }));
   }
@@ -103,11 +134,13 @@ export function QuestionnaireForm() {
     setError("");
 
     if (authLoading) {
+      setMissingFieldNames([]);
       setError("正在确认登录状态，请稍后再试。");
       return;
     }
 
     if (!user) {
+      setMissingFieldNames([]);
       setError("请先登录后再提交，我们会保留你已填写的内容。");
 
       if (typeof window !== "undefined") {
@@ -124,10 +157,13 @@ export function QuestionnaireForm() {
     const missing = requiredFieldNames.filter((fieldName) => !isFilled(formData[fieldName]));
 
     if (missing.length > 0) {
-      setError("还有必填信息未完成，请先补齐后再生成结果。");
+      setMissingFieldNames(missing);
+      setError(`仍有 ${missing.length} 项必填信息未完成，请先补齐后再生成结果。`);
+      requestAnimationFrame(() => scrollToField(missing[0]));
       return;
     }
 
+    setMissingFieldNames([]);
     setSubmitting(true);
 
     try {
@@ -189,15 +225,19 @@ export function QuestionnaireForm() {
           <h2>{section.title}</h2>
           <div className="field-grid">
             {section.fields.map((field) => (
-              <label className="field-block" key={field.name}>
+              <label
+                className={missingFieldSet.has(field.name) ? "field-block field-block--missing" : "field-block"}
+                data-field-name={field.name}
+                key={field.name}
+              >
                 <span className="field-label">
                   {field.label}
-                  {field.required ? <strong> *</strong> : null}
+                  {field.required ? <strong className={missingFieldSet.has(field.name) ? "required-mark required-mark--missing" : "required-mark"}> *</strong> : null}
                 </span>
 
                 {field.type === "text" ? (
                   <input
-                    className="text-input"
+                    className={missingFieldSet.has(field.name) ? "text-input input--missing" : "text-input"}
                     type="text"
                     value={formData[field.name]}
                     placeholder={field.placeholder}
@@ -207,7 +247,7 @@ export function QuestionnaireForm() {
 
                 {field.type === "textarea" ? (
                   <textarea
-                    className="text-area"
+                    className={missingFieldSet.has(field.name) ? "text-area input--missing" : "text-area"}
                     rows={4}
                     value={formData[field.name]}
                     placeholder={field.placeholder}
@@ -216,7 +256,7 @@ export function QuestionnaireForm() {
                 ) : null}
 
                 {field.type === "radio" ? (
-                  <div className="option-grid">
+                  <div className={missingFieldSet.has(field.name) ? "option-grid option-grid--missing" : "option-grid"}>
                     {field.options.map(([value, label]) => (
                       <button
                         className={formData[field.name] === value ? "option-chip active" : "option-chip"}
@@ -231,7 +271,7 @@ export function QuestionnaireForm() {
                 ) : null}
 
                 {field.type === "checkbox" ? (
-                  <div className="option-grid">
+                  <div className={missingFieldSet.has(field.name) ? "option-grid option-grid--missing" : "option-grid"}>
                     {field.options.map(([value, label]) => {
                       const selected = Array.isArray(formData[field.name]) && formData[field.name].includes(value);
 
@@ -248,6 +288,8 @@ export function QuestionnaireForm() {
                     })}
                   </div>
                 ) : null}
+
+                {missingFieldSet.has(field.name) ? <span className="field-missing-hint">此项为必填，请先完成。</span> : null}
               </label>
             ))}
           </div>
@@ -255,6 +297,23 @@ export function QuestionnaireForm() {
       ))}
 
       <section className="questionnaire-v2-submit">
+        {missingFieldNames.length > 0 ? (
+          <div aria-live="assertive" className="questionnaire-v2-missing-alert" role="alert">
+            <p className="questionnaire-v2-missing-alert-title">请先补齐以下必填项</p>
+            <div className="questionnaire-v2-missing-list">
+              {missingFieldNames.map((fieldName) => (
+                <button
+                  className="questionnaire-v2-missing-chip"
+                  key={fieldName}
+                  onClick={() => scrollToField(fieldName)}
+                  type="button"
+                >
+                  {getFieldLabel(fieldName)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {error ? <p className="error-text">{error}</p> : null}
         <button className="questionnaire-v2-submit-btn" disabled={submitting} type="submit">
           {submitting ? "正在生成，请稍候..." : "提交并生成诊断报告"}

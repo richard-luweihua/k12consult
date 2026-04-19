@@ -8,13 +8,18 @@ export async function POST(request) {
       return NextResponse.json({ ok: false, message: "用户认证尚未配置完成" }, { status: 503 });
     }
 
-    const { email, password, fullName } = await request.json();
+    const { email, password, fullName, mobile } = await request.json();
 
     if (!email || !password || !fullName) {
       return NextResponse.json({ ok: false, message: "请填写完整的姓名、邮箱和密码" }, { status: 400 });
     }
 
-    const user = await registerUser({ email, password, fullName });
+    const user = await registerUser({
+      email,
+      password,
+      fullName,
+      mobile: typeof mobile === "string" ? mobile.trim() : ""
+    });
     const token = await createUserSessionToken(user);
     const response = NextResponse.json({ ok: true, user });
 

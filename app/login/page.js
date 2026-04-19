@@ -26,6 +26,7 @@ function LoginPageContent() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
+  const [signUpMobile, setSignUpMobile] = useState('');
   const [mobile, setMobile] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpChallengeId, setOtpChallengeId] = useState('');
@@ -86,7 +87,7 @@ function LoginPageContent() {
         router.push(redirectPath);
       } else {
         if (isSignUp) {
-          const { error } = await signUp(email, password, fullName);
+          const { error } = await signUp(email, password, fullName, signUpMobile);
           if (error) throw error;
           router.push(redirectPath);
         } else {
@@ -173,16 +174,27 @@ function LoginPageContent() {
           ) : (
             <div className="login-v2-field-group">
               {isSignUp && (
-                <input
-                  id="full-name"
-                  name="fullName"
-                  type="text"
-                  required
-                  className="login-v2-input"
-                  placeholder="姓名"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
+                <>
+                  <input
+                    id="full-name"
+                    name="fullName"
+                    type="text"
+                    required
+                    className="login-v2-input"
+                    placeholder="姓名"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                  <input
+                    id="signup-mobile"
+                    name="mobile"
+                    type="text"
+                    className="login-v2-input"
+                    placeholder="手机号（选填，便于自动带入咨询意向）"
+                    value={signUpMobile}
+                    onChange={(e) => setSignUpMobile(e.target.value)}
+                  />
+                </>
               )}
               <input
                 id="email-address"

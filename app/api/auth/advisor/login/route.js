@@ -15,26 +15,26 @@ export async function POST(request) {
   const next = String(formData.get("next") || "/advisor/workbench");
 
   if (!hasUserAuthConfig()) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/login?error=config", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/login?error=config", request), { status: 303 });
   }
 
   try {
     const user = await loginUser({ email, password });
 
     if (!["consultant", "admin", "super_admin"].includes(user.role)) {
-      const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+      const loginUrl = absoluteAppUrl("/advisor/login", request);
       loginUrl.searchParams.set("error", "role");
       return NextResponse.redirect(loginUrl, { status: 303 });
     }
 
     const response = NextResponse.redirect(
-      absoluteAppUrl(next.startsWith("/") ? next : "/advisor/workbench", request.url),
+      absoluteAppUrl(next.startsWith("/") ? next : "/advisor/workbench", request),
       { status: 303 }
     );
     response.cookies.set(USER_SESSION_COOKIE, await createUserSessionToken(user), getUserSessionCookieOptions());
     return response;
   } catch {
-    const loginUrl = absoluteAppUrl("/advisor/login", request.url);
+    const loginUrl = absoluteAppUrl("/advisor/login", request);
     if (next && next.startsWith("/")) {
       loginUrl.searchParams.set("next", next);
     }

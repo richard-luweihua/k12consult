@@ -1,8 +1,20 @@
 'use client';
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Activity,
+  Clock3,
+  Handshake,
+  Languages,
+  ListChecks,
+  School,
+  ShieldCheck,
+  Target,
+  TriangleAlert,
+  User
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { apiPath, appPath } from "@/lib/paths";
 import { usePermissions } from "@/lib/permissions";
@@ -13,12 +25,14 @@ const contactTimeOptions = [
   ["weekend", "周末"],
   ["flexible", "均可"]
 ];
+
 const consultationStatusLabelMap = {
   draft: "已填写意向偏好，待确认提交",
   submitted: "已提交咨询意向",
   not_requested: "尚未提交咨询意向",
   cancelled: "已取消"
 };
+
 const v2StatusLabelMap = {
   report_viewed: "报告已查看",
   consult_intent_submitted: "咨询意向已提交",
@@ -26,19 +40,18 @@ const v2StatusLabelMap = {
   awaiting_user_info: "待补资料",
   consult_ready_for_assignment: "可转顾问",
   consult_assigned: "已转顾问",
-  consult_scheduled: "咨询已排期",
-  consult_completed: "咨询已完成",
   follow_up: "咨询后跟进",
   nurturing: "培育池",
   closed: "已关闭"
 };
+
 const missingInfoLabelMap = {
   academic_reports: "成绩单",
   standardized_scores: "标准化成绩",
   identity_proof: "身份证明",
   address_proof: "住址证明"
 };
-const defaultMissingInfoOptions = Object.keys(missingInfoLabelMap);
+
 const gradeLabelMap = {
   kindergarten: "幼儿园",
   "g1-g3": "小学 1-3 年级",
@@ -47,12 +60,23 @@ const gradeLabelMap = {
   "g10-g12": "高中 10-12 年级"
 };
 
+const chapterConfig = [
+  { key: "basicInfo", title: "0. 基本信息", Icon: User },
+  { key: "verdict", title: "1. 核心结论 (The Verdict)", Icon: Target },
+  { key: "diagnosticDimensions", title: "2. 核心诊断维度", Icon: Activity },
+  { key: "recommendedSchools", title: "3. 目标学校穿透建议", Icon: School },
+  { key: "criticalWarnings", title: "4. 深度风险预警", Icon: TriangleAlert },
+  { key: "nextSteps", title: "5. 后续行动清单", Icon: ListChecks },
+  { key: "consultationGuide", title: "6. 专家人工介入引导", Icon: Handshake },
+  { key: "meta", title: "7. 诊断依据声明", Icon: ShieldCheck }
+];
+
 function resolveCurrentV2Status(lead) {
   return lead?.caseRecord?.status || lead?.adminFollowUpRecord?.status || "report_viewed";
 }
 
 function canEditConsultationIntent(v2Status) {
-  return !["closed", "nurturing", "consult_scheduled", "consult_completed", "follow_up"].includes(v2Status);
+  return !["consult_assigned", "follow_up", "nurturing", "closed"].includes(v2Status);
 }
 
 function toggleArrayValue(values, value) {
@@ -63,13 +87,29 @@ function toggleArrayValue(values, value) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
 
+function toDisplayValue(value, fallback = "未填写") {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return fallback;
+}
+
 function formatDateTime(value) {
   if (!value) {
-    return "未知";
+    return "待更新";
   }
 
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "未知" : date.toLocaleString("zh-CN");
+  if (Number.isNaN(date.getTime())) {
+    return "待更新";
+  }
+
+  return date.toLocaleString("zh-CN");
 }
 
 function formatDate(value) {
@@ -78,42 +118,282 @@ function formatDate(value) {
   }
 
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "待更新" : date.toLocaleDateString("zh-CN");
-}
-
-function toDisplayValue(value, fallback = "未填写") {
-  if (typeof value === "string" && value.trim()) {
-    return value.trim();
+  if (Number.isNaN(date.getTime())) {
+    return "待更新";
   }
 
-  return fallback;
+  return date.toLocaleDateString("zh-CN");
 }
 
-function normalizeSchoolName(school) {
-  return school.schoolName || school.school_name || "待匹配学校";
+function normalizeSchoolItem(item, index) {
+  const name = toDisplayValue(item?.school_name || item?.schoolName, `候选学校 ${index + 1}`);
+
+  return {
+    school_name: name,
+    match_score: item?.match_score ?? item?.matchScore ?? "待评估",
+    critical_bottleneck: toDisplayValue(item?.critical_bottleneck || item?.criticalBottleneck, "待补充"),
+    insider_tips: toDisplayValue(item?.insider_tips || item?.consultantInsiderTips, "待补充"),
+    tuition_hint: toDisplayValue(item?.tuition_hint || item?.tuitionFitNote, "待补充")
+  };
 }
 
-function normalizeSchoolScore(school) {
-  const score = school.matchScore ?? school.match_score ?? null;
+function normalizeWarningItem(item, index) {
+  return {
+    title: toDisplayValue(item?.title || item?.warning_title, `风险预警 ${index + 1}`),
+    content: toDisplayValue(item?.content || item?.warning_content, "待补充")
+  };
+}
 
-  if (typeof score === "number") {
-    return score;
-  }
+function resolveRawReportView(lead) {
+  return (
+    lead?.currentReport?.contentJson?.reportView ||
+    lead?.currentReport?.summary?.reportView ||
+    lead?.result?.currentReport?.summary?.reportView ||
+    null
+  );
+}
 
-  if (typeof score === "string" && score.trim()) {
-    return score.trim();
-  }
+function buildFallbackReportView(lead) {
+  const result = lead?.result || {};
+  const answers = lead?.answers || {};
+  const reportSummary = lead?.currentReport?.summary || result?.currentReport?.summary || {};
+  const ruleResult = lead?.diagnosticResult?.ruleResultJson || {};
+  const schoolSnapshot = lead?.diagnosticResult?.schoolDataSnapshotJson || {};
 
-  return "待评估";
+  const studentName = toDisplayValue(answers.studentName || lead?.questionnaireResponse?.responseJson?.studentName, "未命名学生");
+  const currentGradeRaw = answers.grade || lead?.questionnaireResponse?.responseJson?.currentGrade;
+  const currentGrade = gradeLabelMap[currentGradeRaw] || toDisplayValue(currentGradeRaw, "未填写");
+
+  const identityVerdict = toDisplayValue(
+    reportSummary.identityVerdict || result.identityVerdict || ruleResult.identityAssessment?.verdict,
+    "待评估"
+  );
+  const budgetMatchSummary = toDisplayValue(reportSummary.budgetMatchSummary || result.budgetMatchSummary, "待评估");
+
+  const verdictHeadline = toDisplayValue(
+    result.overview,
+    "系统已完成首轮诊断，建议按下方行动清单推进下一步。"
+  );
+  const verdictMarkdown = [
+    `身份判断：${toDisplayValue(ruleResult.identityAssessment?.warning, "当前身份条件不构成直接阻断，可继续推进。")}`,
+    `总体风险：${
+      Array.isArray(result.riskTags) && result.riskTags.length > 0
+        ? result.riskTags.join("、")
+        : "当前主要风险可控，可继续推进细化判断"
+    }`
+  ].join("\n");
+
+  const intakeTimingAnalysis = {
+    status: toDisplayValue(reportSummary.intakeWindowVerdict || result.timingVerdict || ruleResult.timingAssessment?.verdict, "待评估"),
+    detail: toDisplayValue(
+      ruleResult.timingAssessment?.analysis,
+      "系统已完成时机初判，建议尽快明确目标学校带并进入执行准备。"
+    )
+  };
+
+  const englishRisk = {
+    level: toDisplayValue(reportSummary.englishRiskLevel || result.englishRiskLevel || ruleResult.englishAssessment?.level, "待评估"),
+    current: toDisplayValue(ruleResult.englishAssessment?.userLevelDescription, "待补充"),
+    target_barrier: toDisplayValue(ruleResult.englishAssessment?.targetBarrierLabel, "待匹配"),
+    advice: toDisplayValue(
+      ruleResult.englishAssessment?.bridgeAdvice,
+      "建议结合目标学校要求进行针对性衔接准备。"
+    )
+  };
+
+  const recommendedSchoolsSource =
+    (Array.isArray(reportSummary.recommendedSchools) && reportSummary.recommendedSchools.length > 0
+      ? reportSummary.recommendedSchools
+      : Array.isArray(schoolSnapshot.recommendedSchools)
+        ? schoolSnapshot.recommendedSchools
+        : []);
+
+  const recommendedSchools = recommendedSchoolsSource.map(normalizeSchoolItem);
+
+  const warningSource =
+    Array.isArray(reportSummary.criticalWarnings) && reportSummary.criticalWarnings.length > 0
+      ? reportSummary.criticalWarnings
+      : [{ title: "当前可继续推进", content: "目前没有触发硬性阻断项，可继续进入顾问细化判断。" }];
+  const warningsArray = warningSource.map(normalizeWarningItem);
+
+  const nextActions = Array.isArray(result.nextActions) ? result.nextActions : [];
+
+  const actionPlan = {
+    phaseImmediate: [
+      nextActions[0] || "先确认目标切入时间与优先路径。",
+      nextActions[1] || "围绕预算与学校带，收敛到可执行方案。"
+    ],
+    phasePreparation: [
+      nextActions[2] || "补齐关键材料，建立学校申请清单。",
+      nextActions[3] || "安排一次深度咨询，确认最终执行顺序。"
+    ]
+  };
+
+  const complexityLabel =
+    Array.isArray(result.riskTags) && result.riskTags.length > 0
+      ? result.riskTags.join("、")
+      : "时间窗口与路径判断";
+
+  const consultationGuide = {
+    complexity_label: complexityLabel,
+    description: `由于你的案例涉及 ${complexityLabel}，建议立即预约资深顾问进行深度评估。`,
+    cta_label: "立即预约资深顾问"
+  };
+
+  const meta = {
+    rules_version: toDisplayValue(lead?.diagnosticJob?.versionSnapshot?.rulesVersion, "V1.0"),
+    engine_version: toDisplayValue(lead?.diagnosticJob?.versionSnapshot?.engineVersion, "K12-Expert-Engine"),
+    school_snapshot_date: formatDate(
+      schoolSnapshot.snapshotDate ||
+        schoolSnapshot.dataSnapshotDate ||
+        lead?.diagnosticResult?.createdAt ||
+        lead?.currentReport?.createdAt
+    )
+  };
+
+  return {
+    basicInfo: {
+      student_name: studentName,
+      current_grade: currentGrade,
+      identity_status: identityVerdict,
+      budget_match: budgetMatchSummary
+    },
+    verdict: {
+      verdict: verdictHeadline,
+      verdict_markdown: verdictMarkdown
+    },
+    diagnosticDimensions: {
+      intake_timing_analysis: intakeTimingAnalysis,
+      english_risk: englishRisk
+    },
+    recommendedSchools,
+    criticalWarnings: warningsArray,
+    nextSteps: actionPlan,
+    consultationGuide,
+    meta
+  };
+}
+
+function normalizeReportView(rawReportView, fallback) {
+  const raw = rawReportView && typeof rawReportView === "object" ? rawReportView : {};
+
+  const basicInfo = {
+    student_name: toDisplayValue(raw?.basicInfo?.student_name || raw?.basicInfo?.studentName, fallback.basicInfo.student_name),
+    current_grade: toDisplayValue(raw?.basicInfo?.current_grade || raw?.basicInfo?.currentGrade, fallback.basicInfo.current_grade),
+    identity_status: toDisplayValue(raw?.basicInfo?.identity_status || raw?.basicInfo?.identityStatus, fallback.basicInfo.identity_status),
+    budget_match: toDisplayValue(raw?.basicInfo?.budget_match || raw?.basicInfo?.budgetMatch, fallback.basicInfo.budget_match)
+  };
+
+  const verdict = {
+    verdict: toDisplayValue(raw?.verdict?.verdict || raw?.verdict, fallback.verdict.verdict),
+    verdict_markdown: toDisplayValue(
+      raw?.verdict?.verdict_markdown || raw?.verdict?.verdictMarkdown,
+      fallback.verdict.verdict_markdown
+    )
+  };
+
+  const diagnosticDimensions = {
+    intake_timing_analysis: {
+      status: toDisplayValue(
+        raw?.diagnosticDimensions?.intake_timing_analysis?.status || raw?.intake_timing_analysis?.status,
+        fallback.diagnosticDimensions.intake_timing_analysis.status
+      ),
+      detail: toDisplayValue(
+        raw?.diagnosticDimensions?.intake_timing_analysis?.detail || raw?.intake_timing_analysis?.detail,
+        fallback.diagnosticDimensions.intake_timing_analysis.detail
+      )
+    },
+    english_risk: {
+      level: toDisplayValue(
+        raw?.diagnosticDimensions?.english_risk?.level || raw?.english_risk?.level,
+        fallback.diagnosticDimensions.english_risk.level
+      ),
+      current: toDisplayValue(
+        raw?.diagnosticDimensions?.english_risk?.current || raw?.english_risk?.current,
+        fallback.diagnosticDimensions.english_risk.current
+      ),
+      target_barrier: toDisplayValue(
+        raw?.diagnosticDimensions?.english_risk?.target_barrier || raw?.english_risk?.target_barrier,
+        fallback.diagnosticDimensions.english_risk.target_barrier
+      ),
+      advice: toDisplayValue(
+        raw?.diagnosticDimensions?.english_risk?.advice || raw?.english_risk?.advice,
+        fallback.diagnosticDimensions.english_risk.advice
+      )
+    }
+  };
+
+  const recommendedSchoolsInput = Array.isArray(raw?.recommendedSchools)
+    ? raw.recommendedSchools
+    : Array.isArray(raw?.schools_array)
+      ? raw.schools_array
+      : fallback.recommendedSchools;
+
+  const criticalWarningsInput = Array.isArray(raw?.criticalWarnings)
+    ? raw.criticalWarnings
+    : Array.isArray(raw?.warnings_array)
+      ? raw.warnings_array
+      : fallback.criticalWarnings;
+
+  const nextSteps = {
+    phaseImmediate: Array.isArray(raw?.nextSteps?.phaseImmediate)
+      ? raw.nextSteps.phaseImmediate
+      : Array.isArray(raw?.action_plan?.phaseImmediate)
+        ? raw.action_plan.phaseImmediate
+        : fallback.nextSteps.phaseImmediate,
+    phasePreparation: Array.isArray(raw?.nextSteps?.phasePreparation)
+      ? raw.nextSteps.phasePreparation
+      : Array.isArray(raw?.action_plan?.phasePreparation)
+        ? raw.action_plan.phasePreparation
+        : fallback.nextSteps.phasePreparation
+  };
+
+  const consultationGuide = {
+    complexity_label: toDisplayValue(
+      raw?.consultationGuide?.complexity_label,
+      fallback.consultationGuide.complexity_label
+    ),
+    description: toDisplayValue(raw?.consultationGuide?.description, fallback.consultationGuide.description),
+    cta_label: toDisplayValue(raw?.consultationGuide?.cta_label, fallback.consultationGuide.cta_label)
+  };
+
+  const meta = {
+    rules_version: toDisplayValue(raw?.meta?.rules_version, fallback.meta.rules_version),
+    engine_version: toDisplayValue(raw?.meta?.engine_version, fallback.meta.engine_version),
+    school_snapshot_date: toDisplayValue(raw?.meta?.school_snapshot_date, fallback.meta.school_snapshot_date)
+  };
+
+  return {
+    basicInfo,
+    verdict,
+    diagnosticDimensions,
+    recommendedSchools: recommendedSchoolsInput.map(normalizeSchoolItem),
+    criticalWarnings: criticalWarningsInput.map(normalizeWarningItem),
+    nextSteps,
+    consultationGuide,
+    meta
+  };
+}
+
+function SectionTitle({ title, Icon }) {
+  return (
+    <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <Icon size={18} strokeWidth={2.2} />
+      <span>{title}</span>
+    </h2>
+  );
 }
 
 export default function ResultPage() {
   const params = useParams();
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { canViewOwnLeads, canViewAssignedLeads, canViewAllLeads } = usePermissions();
+
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+
   const [contactTimePreference, setContactTimePreference] = useState("flexible");
   const [intentMobile, setIntentMobile] = useState("");
   const [intentWechatId, setIntentWechatId] = useState("");
@@ -121,6 +401,7 @@ export default function ResultPage() {
   const [submittingIntent, setSubmittingIntent] = useState(false);
   const [intentMessage, setIntentMessage] = useState("");
   const [intentError, setIntentError] = useState("");
+
   const [supplementalProvidedItems, setSupplementalProvidedItems] = useState([]);
   const [supplementalNotes, setSupplementalNotes] = useState("");
   const [submittingSupplemental, setSubmittingSupplemental] = useState(false);
@@ -128,8 +409,17 @@ export default function ResultPage() {
   const [supplementalError, setSupplementalError] = useState("");
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      const next = encodeURIComponent(appPath(`/result/${params?.submissionId || ""}`));
+      router.replace(appPath(`/login?next=${next}`));
+    }
+  }, [authLoading, user, router, params?.submissionId]);
+
+  useEffect(() => {
     async function fetchLead() {
-      if (!params?.submissionId) return;
+      if (!params?.submissionId) {
+        return;
+      }
 
       try {
         const response = await fetch(apiPath(`/api/results/${params.submissionId}`), {
@@ -142,11 +432,12 @@ export default function ResultPage() {
         }
 
         if (!response.ok) {
-          throw new Error("获取结果失败");
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload?.message || "获取结果失败");
         }
 
-        const { lead: leadData } = await response.json();
-        setLead(leadData);
+        const payload = await response.json();
+        setLead(payload.lead || null);
       } catch (error) {
         setFetchError(error instanceof Error ? error.message : "获取结果失败");
       } finally {
@@ -154,10 +445,10 @@ export default function ResultPage() {
       }
     }
 
-    if (!authLoading) {
+    if (!authLoading && user) {
       fetchLead();
     }
-  }, [params?.submissionId, authLoading]);
+  }, [params?.submissionId, authLoading, user]);
 
   useEffect(() => {
     if (!lead) {
@@ -176,6 +467,18 @@ export default function ResultPage() {
     setSupplementalNotes(lead.adminFollowUpRecord?.userSupplement?.notes || "");
   }, [lead, user]);
 
+  const currentV2Status = resolveCurrentV2Status(lead);
+
+  const reportView = useMemo(() => {
+    if (!lead) {
+      return null;
+    }
+
+    const fallback = buildFallbackReportView(lead);
+    const rawReportView = resolveRawReportView(lead);
+    return normalizeReportView(rawReportView, fallback);
+  }, [lead]);
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -185,14 +488,10 @@ export default function ResultPage() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-red-600">请先登录</div>
-      </div>
-    );
+    return null;
   }
 
-  if (!lead) {
+  if (!lead || !reportView) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg text-red-600">{fetchError || "未找到对应结果"}</div>
@@ -202,12 +501,11 @@ export default function ResultPage() {
 
   const consultantKey = user.consultant_id || user.consultantId || user.id;
   const isOwner = lead.userId === user.id || lead.user_id === user.id || lead.answers?.userId === user.id;
-  const canView = (
+  const canView =
     (canViewOwnLeads && isOwner) ||
     canViewAllLeads ||
     (canViewAssignedLeads &&
-      (lead.assignedConsultantId === consultantKey || lead.assigned_consultant_id === consultantKey))
-  );
+      (lead.assignedConsultantId === consultantKey || lead.assigned_consultant_id === consultantKey));
 
   if (!canView) {
     return (
@@ -217,13 +515,7 @@ export default function ResultPage() {
     );
   }
 
-  const result = lead.result || {};
-  const answers = lead.answers || {};
   const assignment = lead.assignment || {};
-  const reportSummary = lead.currentReport?.summary || result.currentReport?.summary || {};
-  const ruleResult = lead.diagnosticResult?.ruleResultJson || {};
-  const schoolSnapshot = lead.diagnosticResult?.schoolDataSnapshotJson || {};
-  const currentV2Status = resolveCurrentV2Status(lead);
   const consultationRequest = lead.consultationRequest || {};
   const adminRecord = lead.adminFollowUpRecord || {};
   const consultationStatus = consultationRequest.requestStatus || "not_requested";
@@ -232,80 +524,10 @@ export default function ResultPage() {
   const missingInfoOptions =
     Array.isArray(adminRecord.missingInfo) && adminRecord.missingInfo.length > 0
       ? adminRecord.missingInfo
-      : defaultMissingInfoOptions;
+      : Object.keys(missingInfoLabelMap);
   const intentButtonLabel = consultationStatus === "submitted" ? "更新咨询意向" : "确认并提交咨询意向";
-
-  const studentName = toDisplayValue(answers.studentName || lead.questionnaireResponse?.responseJson?.studentName);
-  const currentGradeRaw = answers.grade || lead.questionnaireResponse?.responseJson?.currentGrade;
-  const currentGrade = gradeLabelMap[currentGradeRaw] || toDisplayValue(currentGradeRaw);
-  const identityVerdict = toDisplayValue(
-    reportSummary.identityVerdict || result.identityVerdict || ruleResult.identityAssessment?.verdict,
-    "待评估"
-  );
-  const budgetMatchSummary = toDisplayValue(reportSummary.budgetMatchSummary || result.budgetMatchSummary, "待评估");
-  const coreConclusion = toDisplayValue(
-    result.overview,
-    "系统已完成首轮诊断，建议按下方行动清单推进下一步。"
-  );
-  const identityWarning = toDisplayValue(
-    ruleResult.identityAssessment?.warning,
-    "当前身份条件不构成直接阻断，可继续推进下一步判断。"
-  );
-  const overallRiskSummary = Array.isArray(result.riskTags) && result.riskTags.length > 0
-    ? `当前主要风险：${result.riskTags.join("、")}。`
-    : "当前主要风险可控，可继续推进细化判断。";
-  const intakeWindowVerdict = toDisplayValue(
-    reportSummary.intakeWindowVerdict || result.timingVerdict || ruleResult.timingAssessment?.verdict,
-    "待评估"
-  );
-  const intakeTimingAnalysis = toDisplayValue(
-    ruleResult.timingAssessment?.analysis,
-    "系统已完成时机初判，建议尽快明确目标学校带并进入执行准备。"
-  );
-  const englishRiskLevel = toDisplayValue(
-    reportSummary.englishRiskLevel || result.englishRiskLevel || ruleResult.englishAssessment?.level,
-    "待评估"
-  );
-  const userEnglishLevelDesc = toDisplayValue(ruleResult.englishAssessment?.userLevelDescription, "待补充");
-  const targetPoolBarrier = toDisplayValue(ruleResult.englishAssessment?.targetBarrierLabel, "待匹配");
-  const englishBridgeAdvice = toDisplayValue(
-    ruleResult.englishAssessment?.bridgeAdvice,
-    "建议结合目标学校要求进行针对性衔接准备。"
-  );
-  const recommendedSchools =
-    Array.isArray(reportSummary.recommendedSchools) && reportSummary.recommendedSchools.length > 0
-      ? reportSummary.recommendedSchools
-      : Array.isArray(schoolSnapshot.recommendedSchools)
-        ? schoolSnapshot.recommendedSchools
-        : [];
-  const criticalWarningsRaw =
-    Array.isArray(reportSummary.criticalWarnings) && reportSummary.criticalWarnings.length > 0
-      ? reportSummary.criticalWarnings
-      : [];
-  const criticalWarnings = criticalWarningsRaw.length > 0
-    ? criticalWarningsRaw
-    : [{ title: "当前可继续推进", content: "目前没有触发硬性阻断项，可继续进入顾问细化判断。" }];
-  const immediateActions = [
-    result.nextActions?.[0] || "先确认目标切入时间与优先路径。",
-    result.nextActions?.[1] || "围绕预算与学校带，收敛到可执行方案。"
-  ];
-  const preparationActions = [
-    result.nextActions?.[2] || "补齐关键材料，建立学校申请清单。",
-    result.nextActions?.[3] || "安排一次深度咨询，确认最终执行顺序。"
-  ];
-  const complexityLabels =
-    Array.isArray(result.riskTags) && result.riskTags.length > 0
-      ? result.riskTags.join("、")
-      : "时间窗口与路径判断";
-  const rulesVersion = toDisplayValue(lead.diagnosticJob?.versionSnapshot?.rulesVersion, "V1.0");
-  const engineVersion = toDisplayValue(lead.diagnosticJob?.versionSnapshot?.engineVersion, "K12-Expert-Engine");
-  const dataSnapshotDate = formatDate(
-    schoolSnapshot.snapshotDate ||
-      schoolSnapshot.dataSnapshotDate ||
-      lead.diagnosticResult?.createdAt ||
-      lead.currentReport?.createdAt
-  );
   const reportUpdatedAt = formatDateTime(lead.currentReport?.createdAt || lead.updatedAt || lead.updated_at);
+
   async function submitConsultationIntent() {
     if (!params?.submissionId || !canSubmitIntent) {
       return;
@@ -403,6 +625,192 @@ export default function ResultPage() {
     setIntentError("请先填写联系方式后再提交咨询意向。");
   }
 
+  function renderChapter(key) {
+    if (key === "basicInfo") {
+      return (
+        <ul className="report-v2-list">
+          <li>
+            <strong>学生主体：</strong>
+            {reportView.basicInfo.student_name}
+          </li>
+          <li>
+            <strong>当前年级：</strong>
+            {reportView.basicInfo.current_grade}
+          </li>
+          <li>
+            <strong>身份状态：</strong>
+            {reportView.basicInfo.identity_status}
+          </li>
+          <li>
+            <strong>预算匹配：</strong>
+            {reportView.basicInfo.budget_match}
+          </li>
+        </ul>
+      );
+    }
+
+    if (key === "verdict") {
+      return (
+        <>
+          <p>{reportView.verdict.verdict}</p>
+          <blockquote className="report-v2-quote" style={{ whiteSpace: "pre-line" }}>
+            {reportView.verdict.verdict_markdown}
+          </blockquote>
+        </>
+      );
+    }
+
+    if (key === "diagnosticDimensions") {
+      return (
+        <>
+          <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Clock3 size={16} />
+            <span>2.1 申请时机与窗口</span>
+          </h3>
+          <ul className="report-v2-list">
+            <li>
+              <strong>判定状态：</strong>
+              {reportView.diagnosticDimensions.intake_timing_analysis.status}
+            </li>
+            <li>
+              <strong>详细评估：</strong>
+              {reportView.diagnosticDimensions.intake_timing_analysis.detail}
+            </li>
+          </ul>
+
+          <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Languages size={16} />
+            <span>2.2 语言衔接风险</span>
+          </h3>
+          <ul className="report-v2-list">
+            <li>
+              <strong>预警等级：</strong>
+              {reportView.diagnosticDimensions.english_risk.level}
+            </li>
+            <li>
+              <strong>用户当前：</strong>
+              {reportView.diagnosticDimensions.english_risk.current}
+            </li>
+            <li>
+              <strong>目标池门槛：</strong>
+              {reportView.diagnosticDimensions.english_risk.target_barrier}
+            </li>
+            <li>
+              <strong>专家建议：</strong>
+              {reportView.diagnosticDimensions.english_risk.advice}
+            </li>
+          </ul>
+        </>
+      );
+    }
+
+    if (key === "recommendedSchools") {
+      return reportView.recommendedSchools.length > 0 ? (
+        <div className="report-v2-school-list">
+          {reportView.recommendedSchools.map((school, index) => (
+            <div className="report-v2-school-item" key={`${school.school_name}-${index + 1}`}>
+              <h3>{school.school_name}</h3>
+              <ul className="report-v2-list">
+                <li>
+                  <strong>适配度评估：</strong>
+                  {school.match_score} / 10
+                </li>
+                <li>
+                  <strong>关键卡点：</strong>
+                  {school.critical_bottleneck}
+                </li>
+                <li>
+                  <strong>顾问私货：</strong>
+                  {school.insider_tips}
+                </li>
+                <li>
+                  <strong>学费提示：</strong>
+                  {school.tuition_hint}
+                </li>
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>当前暂无可展示学校建议，建议先提交咨询意向由顾问补全。</p>
+      );
+    }
+
+    if (key === "criticalWarnings") {
+      return (
+        <ul className="report-v2-list">
+          {reportView.criticalWarnings.map((warning, index) => (
+            <li key={`${warning.title}-${index + 1}`}>
+              <strong>{warning.title}：</strong>
+              {warning.content}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    if (key === "nextSteps") {
+      return (
+        <>
+          <h3>第一阶段：立即执行 (下一步 24 小时)</h3>
+          <ol className="report-v2-ordered">
+            {reportView.nextSteps.phaseImmediate.map((item, index) => (
+              <li key={`immediate-${index + 1}`}>{toDisplayValue(item, "待补充")}</li>
+            ))}
+          </ol>
+
+          <h3>第二阶段：资料储备 (1-2 周)</h3>
+          <ol className="report-v2-ordered">
+            {reportView.nextSteps.phasePreparation.map((item, index) => (
+              <li key={`prep-${index + 1}`}>{toDisplayValue(item, "待补充")}</li>
+            ))}
+          </ol>
+        </>
+      );
+    }
+
+    if (key === "consultationGuide") {
+      return (
+        <>
+          <blockquote className="report-v2-quote">
+            <p>
+              <strong>{reportView.consultationGuide.description}</strong>
+            </p>
+          </blockquote>
+          <div className="report-v2-consult-line">
+            <button
+              className="report-v2-consult-btn"
+              disabled={submittingIntent || !canSubmitIntent}
+              onClick={handleConsultEntry}
+              type="button"
+            >
+              {submittingIntent ? "提交中..." : reportView.consultationGuide.cta_label}
+            </button>
+          </div>
+          {intentError ? <p className="report-v2-error">{intentError}</p> : null}
+          {intentMessage ? <p className="report-v2-success">{intentMessage}</p> : null}
+        </>
+      );
+    }
+
+    return (
+      <ul className="report-v2-list">
+        <li>
+          <strong>规则版本：</strong>
+          {reportView.meta.rules_version}
+        </li>
+        <li>
+          <strong>模型引擎：</strong>
+          {reportView.meta.engine_version}
+        </li>
+        <li>
+          <strong>学校库快照：</strong>
+          {reportView.meta.school_snapshot_date}
+        </li>
+      </ul>
+    );
+  }
+
   return (
     <main className="report-v2-page">
       <header className="report-v2-topbar">
@@ -426,122 +834,15 @@ export default function ResultPage() {
           <p>更新时间：{reportUpdatedAt}</p>
         </header>
 
-        <section className="report-v2-section">
-          <h2>0. 基本信息</h2>
-          <ul className="report-v2-list">
-            <li><strong>学生主体：</strong>{studentName}</li>
-            <li><strong>当前年级：</strong>{currentGrade}</li>
-            <li><strong>身份状态：</strong>{identityVerdict}</li>
-            <li><strong>预算匹配：</strong>{budgetMatchSummary}</li>
-          </ul>
-        </section>
-
-        <section className="report-v2-section">
-          <h2>1. 核心结论 (The Verdict)</h2>
-          <p>{coreConclusion}</p>
-          <blockquote className="report-v2-quote">
-            <p><strong>AI 专家判定：</strong></p>
-            <p>{identityWarning}</p>
-            <p>{overallRiskSummary}</p>
-          </blockquote>
-        </section>
-
-        <section className="report-v2-section">
-          <h2>2. 核心诊断维度</h2>
-          <h3>2.1 申请时机与窗口 (Intake Timing)</h3>
-          <ul className="report-v2-list">
-            <li><strong>判定状态：</strong>{intakeWindowVerdict}</li>
-            <li><strong>详细评估：</strong>{intakeTimingAnalysis}</li>
-          </ul>
-          <h3>2.2 语言衔接风险 (English Gap)</h3>
-          <ul className="report-v2-list">
-            <li><strong>预警等级：</strong>{englishRiskLevel}</li>
-            <li><strong>用户当前：</strong>{userEnglishLevelDesc}</li>
-            <li><strong>目标池门槛：</strong>{targetPoolBarrier}</li>
-            <li><strong>专家建议：</strong>{englishBridgeAdvice}</li>
-          </ul>
-        </section>
-
-        <section className="report-v2-section">
-          <h2>3. 目标学校穿透建议 (Target School Drilldown)</h2>
-          {recommendedSchools.length > 0 ? (
-            <div className="report-v2-school-list">
-              {recommendedSchools.map((school, index) => (
-                <div className="report-v2-school-item" key={`${normalizeSchoolName(school)}-${index + 1}`}>
-                  <h3>{normalizeSchoolName(school)}</h3>
-                  <ul className="report-v2-list">
-                    <li><strong>适配度评估：</strong>{normalizeSchoolScore(school)} / 10</li>
-                    <li><strong>关键卡点：</strong>{toDisplayValue(school.criticalBottleneck || school.critical_bottleneck, "待补充")}</li>
-                    <li><strong>顾问私货：</strong>{toDisplayValue(school.consultantInsiderTips || school.consultant_insider_tips, "待补充")}</li>
-                    <li><strong>学费提示：</strong>{toDisplayValue(school.tuitionFitNote || school.tuition_fit_note, "待补充")}</li>
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>当前暂无可展示学校建议，建议先提交咨询意向由顾问补全。</p>
-          )}
-        </section>
-
-        <section className="report-v2-section">
-          <h2>4. 深度风险预警 (Critical Alerts)</h2>
-          <ul className="report-v2-list">
-            {criticalWarnings.map((warning, index) => (
-              <li key={`${warning.title || "warning"}-${index}`}>
-                <strong>{toDisplayValue(warning.title || warning.warning_title, "风险提示")}：</strong>
-                {toDisplayValue(warning.content || warning.warning_content, "待补充")}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="report-v2-section">
-          <h2>5. 后续行动清单 (Next Steps)</h2>
-          <h3>第一阶段：立即执行 (下一步 24 小时)</h3>
-          <ol className="report-v2-ordered">
-            {immediateActions.map((action, index) => (
-              <li key={`immediate-${index + 1}`}>{action}</li>
-            ))}
-          </ol>
-          <h3>第二阶段：资料储备 (1-2 周)</h3>
-          <ol className="report-v2-ordered">
-            {preparationActions.map((action, index) => (
-              <li key={`prep-${index + 1}`}>{action}</li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="report-v2-section">
-          <h2>6. 专家人工介入引导 (Convert to Consultation)</h2>
-          <blockquote className="report-v2-quote">
-            <p>
-              <strong>
-                由于你的案例涉及 {complexityLabels}，建议立即预约资深顾问进行深度线下评估。
-              </strong>
-            </p>
-          </blockquote>
-          <div className="report-v2-consult-line">
-            <button
-              className="report-v2-consult-btn"
-              disabled={submittingIntent || !canSubmitIntent}
-              onClick={handleConsultEntry}
-              type="button"
-            >
-              {submittingIntent ? "提交中..." : "立即预约资深顾问"}
-            </button>
-          </div>
-          {intentError ? <p className="report-v2-error">{intentError}</p> : null}
-          {intentMessage ? <p className="report-v2-success">{intentMessage}</p> : null}
-        </section>
-
-        <section className="report-v2-section report-v2-section--last">
-          <h2>7. 诊断依据声明</h2>
-          <ul className="report-v2-list">
-            <li><strong>规则版本：</strong>{rulesVersion}</li>
-            <li><strong>模型引擎：</strong>{engineVersion}</li>
-            <li><strong>学校库快照：</strong>{dataSnapshotDate}</li>
-          </ul>
-        </section>
+        {chapterConfig.map((chapter) => (
+          <section
+            className={chapter.key === "meta" ? "report-v2-section report-v2-section--last" : "report-v2-section"}
+            key={chapter.key}
+          >
+            <SectionTitle title={chapter.title} Icon={chapter.Icon} />
+            {renderChapter(chapter.key)}
+          </section>
+        ))}
       </article>
 
       <section className="report-v2-service">

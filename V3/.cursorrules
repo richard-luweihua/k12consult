@@ -1,0 +1,336 @@
+# K12consult V3 — Cursor 集成实现指令 (.cursorrules)
+
+> **定位**：本文件是 Cursor IDE 的唯一执行指令集。涵盖实现路线图、编码规范、技术栈约束、状态机规则及安全要求。所有 AI 辅助编码以本文件为准。
+
+---
+
+## 1. 技术栈
+
+| 层 | 技术 | 约束 |
+|----|------|------|
+| 框架 | Next.js (App Router) | 不使用 Pages Router |
+| 数据库 | Supabase (PostgreSQL) | 启用 RLS |
+| 样式 | Tailwind CSS | 不引入其他 CSS 框架 |
+| 图标 | Lucide React | 不引入其他图标库 |
+| 语言 | TypeScript | 严格模式 |
+| 存储 | 本地 JSON + Supabase 双存储 | 优先 Supabase |
+
+---
+
+## 2. 项目结构
+
+```
+app/
+├── page.js                          # 首页
+├── questionnaire/page.js            # 问卷
+├── result/[submissionId]/page.js    # 报告
+├── dashboard/page.js                # 家长仪表板
+├── login/page.js                    # 登录
+├── advisor/
+│   ├── workbench/page.js            # 顾问工作台
+│   ├── cases/[leadId]/page.js       # 顾问案例详情
+│   └── follow-up/page.js           # 跟进清单
+├── admin/
+│   ├── workbench/page.js            # 管理总控台
+│   ├── consultants/                 # 顾问管理
+│   ├── cases/                       # Case 总览与指派
+│   ├── nurturing/page.js           # 培育池
+│   └── sla/page.js                 # SLA 异常
+├── api/
+│   ├── auth/                        # 登录/OTP
+│   ├── intake/route.js              # 问卷提交
+│   ├── results/[submissionId]/      # 报告与咨询意向
+│   ├── my-leads/route.js            # 家长案例
+│   ├── admin/                       # 管理员接口
+│   └── advisor/                     # 顾问接口
+lib/
+├── schema.js                        # 数据模型与类型定义
+├── data.js                          # 数据访问层
+├── constants.ts                     # 状态枚举与常量
+├── intake.js                        # 诊断与报告生成
+├── rules/                           # 业务规则引擎
+│   ├── identity.ts                  # 身份准入
+│   ├── timing.ts                    # 时间窗口
+│   ├── english-risk.ts              # 英文风险
+│   └── budget.ts                    # 预算匹配
+├── utils/
+│   └── date.ts                      # 日期处理（强制统一）
+components/
+├── QuestionnaireForm.js             # 问卷表单
+├── LeadWorkbench.js                 # 案例工作台（按角色切换接口）
+scripts/
+└── verify-login-flow.mjs           # 登录验证脚本
+supabase/
+└── schema.sql                       # DDL（详见 spec.md §2）
+```
+
+---
+
+## 3. 编码规范
+
+### 3.1 核心原则
+
+- **Types First**：严禁无 Interface/Type 读取 JSONB 字段。所有 `response_json`、`rule_result_json`、`summary_json` 必须先定义 TypeScript 接口
+- **Server Actions**：数据变更优先使用 Next.js Server Actions，避免客户端直接调用数据库
+- **DRY Rule**：业务逻辑统一维护在 `lib/rules/`，不在页面组件中内联判断逻辑
+- **职责隔离**：管理员 (`/admin/*`, `/api/admin/*`) 与顾问 (`/advisor/*`, `/api/advisor/*`) 路由和接口严格分离
+
+### 3.2 命名规范
+
+- 文件名：`kebab-case`（如 `english-risk.ts`）
+- 组件名：`PascalCase`（如 `LeadWorkbench`）
+- 变量/函数：`camelCase`
+- 数据库字段：`snake_case`
+- 状态枚举：`UPPER_SNAKE_CASE`（代码中）/ `lower_snake_case`（数据库中）
+
+### 3.3 日期处理
+
+**强制使用 `lib/utils/date.ts`**。禁止直接使用 `new Date()` 或 `Date.now()` 进行业务日期比较。所有涉及时区、窗口期判断的逻辑必须通过统一工具函数。
+
+### 3.4 文案管理
+
+禁止在代码中直接硬编码中文提示文案。所有用户可见文案统一定义在常量文件或配置中。
+
+---
+
+## 4. 角色与权限
+
+### 4.1 角色定义
+
+| 角色 | 路由前缀 | API 前缀 | 权限边界 |
+|------|---------|---------|---------|
+| parent_user | `/dashboard`, `/questionnaire`, `/result` | `/api/my-leads`, `/api/results` | 仅本人 case |
+| consultant | `/advisor/*` | `/api/advisor/*` | 仅已分配 case |
+| admin | `/admin/*` | `/api/admin/*` | 运营范围全部 case |
+| super_admin | `/admin/*` | `/api/admin/*` | 全权限含审计回滚 |
+
+### 4.2 登录跳转
+
+```
+parent_user  → /dashboard
+consultant   → /advisor/workbench
+admin        → /admin/workbench
+super_admin  → /admin/workbench
+```
+
+### 4.3 强登录门禁
+
+以下操作未登录不可执行（返回 401 或跳转 `/login?next=...`）：
+- 提交咨询意向
+- 补资料
+- 查看"我的案例"
+- 所有顾问端操作
+- 所有管理端操作
+
+---
+
+## 5. Case 状态机（核心）
+
+### 5.1 状态枚举
+
+```typescript
+export const CASE_STATUS = {
+  DRAFT: 'draft',
+  CONTACT_PENDING: 'contact_pending',
+  SUBMITTED: 'submitted',
+  PROCESSING: 'processing',
+  REPORT_READY: 'report_ready',
+  REPORT_VIEWED: 'report_viewed',
+  CONSULT_INTENT_SUBMITTED: 'consult_intent_submitted',
+  ADMIN_FOLLOWING: 'admin_following',
+  AWAITING_USER_INFO: 'awaiting_user_info',
+  CONSULT_READY_FOR_ASSIGNMENT: 'consult_ready_for_assignment',
+  CONSULT_ASSIGNED: 'consult_assigned',
+  FOLLOW_UP: 'follow_up',
+  NURTURING: 'nurturing',
+  CLOSED: 'closed',
+} as const;
+```
+
+### 5.2 合法流转
+
+```typescript
+export const VALID_TRANSITIONS: Record<string, string[]> = {
+  draft: ['submitted', 'contact_pending'],
+  contact_pending: ['submitted'],
+  submitted: ['processing'],
+  processing: ['report_ready'],
+  report_ready: ['report_viewed'],
+  report_viewed: ['consult_intent_submitted'],
+  consult_intent_submitted: ['admin_following'],
+  admin_following: ['awaiting_user_info', 'consult_ready_for_assignment', 'nurturing'],
+  awaiting_user_info: ['admin_following', 'nurturing'],
+  consult_ready_for_assignment: ['consult_assigned'],
+  consult_assigned: ['follow_up'],
+  follow_up: ['closed', 'nurturing'],
+  nurturing: ['admin_following'],   // 重新激活
+  closed: ['admin_following'],       // 回退（需原因）
+};
+```
+
+### 5.3 流转约束（代码必须校验）
+
+1. `consult_assigned` 前必须有 `assigned_consultant_id`
+2. `follow_up` 前必须至少有 1 条 `case_follow_ups` 记录
+3. `closed` 前必须填写 `close_reason`
+4. `nurturing` 前必须填写 `nurturing_reason`
+5. `closed → admin_following` 必须填写 `reopen_reason`
+6. `awaiting_user_info` 超过 7 天 → SLA 异常标记
+7. **数据同步 (State Sync)**：任何子记录流转操作必须在同一事物内附带 `UPDATE cases SET status = ...`，杜绝主表/分表状态双写不一致。
+8. **并发加锁 (Concurrency)**：排队拉取任务必须加锁 (`FOR UPDATE SKIP LOCKED`)。
+
+### 5.4 状态变更实现模式
+
+```typescript
+// 所有状态变更必须通过此函数，禁止直接 UPDATE
+async function transitionCaseStatus(
+  caseId: string,
+  newStatus: CaseStatus,
+  actorId: string,
+  metadata?: { reason?: string; summary?: string }
+) {
+  // 1. 读取当前状态
+  // 2. 校验 VALID_TRANSITIONS
+  // 3. 校验前置条件（assignee、reason 等）
+  // 4. 事务内更新 + 写审计日志
+}
+```
+
+---
+
+## 6. 实现路线图
+
+### Phase 1：数据模型与状态机
+**目标**：让系统能表达 V3 业务对象
+
+- [ ] 扩展 `lib/schema.js` 支持全部 V3 类型
+- [ ] 扩展 `supabase/schema.sql`（参照 spec.md §2）
+- [ ] 在 `lib/constants.ts` 定义全量状态枚举与合法流转
+- [ ] 实现 `transitionCaseStatus()` 统一状态变更函数
+- [ ] 确保本地 JSON 和 Supabase 双存储兼容
+
+**完成标志**：现有页面不破坏，新字段可存取
+
+### Phase 2：用户端极简闭环
+**目标**：跑通「问卷 → 报告 → 咨询意向」
+
+- [ ] 问卷升级：草稿保存、进度显示、字段校验
+- [ ] 报告页按 8 章节严格渲染（参照 spec.md §5.1 报告页）
+- [ ] 咨询意向提交 + OTP 登录门禁
+- [ ] 家长仪表板：Next Action 主卡 + 案例列表
+
+**完成标志**：用户端形成完整 case → 管理端可接收咨询意向
+
+### Phase 3：管理端状态治理
+**目标**：管理员独立完成顾问管理 + 指派 + 状态推进
+
+- [ ] 管理总控台：指标看板 + 三大入口
+- [ ] 顾问管理：CRUD + 负载展示 + 软删除
+- [ ] Case 总览：全量筛选 + 手动/批量/推荐指派
+- [ ] Case 详情：交接摘要 + 状态推进 + 审计日志
+- [ ] SLA 监控：首次联系/补资料超时预警
+- [ ] 培育池管理
+
+**完成标志**：管理员可独立完成指派与状态治理闭环
+
+### Phase 4：顾问端轻量执行
+**目标**：顾问只做三件事——接单、跟进、关闭
+
+- [ ] 顾问工作台：待处理案例列表
+- [ ] 案例详情：基础信息 + 管理员交接 + 操作面板
+- [ ] 跟进记录沉淀
+- [ ] 成交关闭校验（必须填 close_reason）
+- [ ] 未成交转资源库校验（必须填 nurturing_reason）
+
+**完成标志**：顾问可独立完成接单→跟进→结案闭环
+
+### Phase 5：AI 诊断与学校库
+**目标**：规则引擎 + 学校匹配 + AI 报告生成
+
+- [ ] 实现 `lib/rules/` 规则引擎（身份/时机/英文/预算）
+- [ ] 学校数据导入接口（CSV → Upsert）
+- [ ] 诊断任务创建与异步执行
+- [ ] 诊断结果快照保存
+- [ ] AI 报告生成（含版本快照）
+- [ ] 失败重试（2次）+ 人工兜底队列
+
+**完成标志**：系统能基于结构化输入生成可回溯报告
+
+### 推荐编码顺序
+```
+Phase 1 → Phase 3 → Phase 2 → Phase 4 → Phase 5
+```
+先补数据和状态流转（Phase 1+3），能最快把 V3 骨架立起来。
+
+---
+
+## 7. UI/UX 规范
+
+### 7.1 视觉
+- **风格**：金融级简约，极简留白
+- **配色**：低饱和，仅主按钮使用高对比色
+- **布局**：单列阅读流（报告页 720-820px），移动端优先
+- **装饰**：不使用配图、插画、渐变、卡片堆叠
+
+### 7.2 交互
+- 页面切换：必须有 Skeleton 骨架屏
+- 提交动作：Loading 态 + 按钮禁用
+- 必填校验：按钮不可提交 + 定位到首个缺失项
+- 错误态：显示重试按钮，不暴露内部错误细节
+- 会话失效：跳转登录并保留 `next` 回跳
+
+### 7.3 语言
+- 用户端全部中文，不出现英文提示文案
+- 可保留模板中的英文括注（如 `The Verdict`）
+- 报告正文中文优先
+
+---
+
+## 8. 安全要求
+
+### 8.1 数据隔离
+- **RLS 强制**：所有 case 数据必须通过 Supabase Row Level Security 物理隔离
+- 用户仅可访问 `user_id = auth.uid()` 的 case
+- 顾问仅可访问 `assigned_consultant_id = auth.uid()` 的 case
+- 内部标签（intent_level、admin 备注）对用户端不可见
+
+### 8.2 PII 脱敏
+- 联系方式在管理员处理前对普通逻辑页脱敏
+- 学校数据库敏感字段（mainland_friendly_score 等）不暴露给用户端 API
+
+### 8.3 认证
+- Cookie：`httpOnly + sameSite=lax`
+- 会话默认 7 天
+- 登录失败频控 + 异常设备提醒
+- 敏感操作要求二次校验
+
+---
+
+## 9. Cursor 特殊指令
+
+1. **状态机校验**：生成任何状态变更代码前，必须核对 §5.2 合法流转表和 §5.3 约束条件
+2. **日期处理**：强制使用 `lib/utils/date.ts`，禁止直接 `new Date()` 做业务比较
+3. **规则引用**：解释代码逻辑时，需同时引用对应的 `lib/rules/` 规则文件
+4. **禁止幻觉**：不硬编码中文文案，不编造不存在的 API 或数据库字段
+5. **双存储兼容**：所有数据操作必须通过 `lib/data.js` 抽象层，同时支持本地 JSON 和 Supabase
+6. **报告结构**：报告页必须严格遵循 8 章节结构（spec.md §5.1），顺序和标题不可更改
+7. **接口分离**：管理员和顾问接口必须分别在 `/api/admin/` 和 `/api/advisor/` 下，不共用
+8. **审计日志**：所有状态变更、指派、关闭操作必须写入 `audit_logs`
+
+---
+
+## 10. 参考文档映射
+
+| 关注点 | 参考文档 |
+|--------|---------|
+| 产品需求与业务逻辑 | `prompt.md` |
+| 数据库 Schema 与技术规格 | `spec.md` |
+| 学校数据字段 | `spec.md` §2.6 + `school-database-schema.md` |
+| 规则引擎逻辑 | `prompt.md` §6 |
+| 报告 Prompt 框架 | `prompt.md` §7 |
+| 页面字段映射 | `spec.md` §5 |
+
+---
+
+*Last Updated: 2026-04-18*
+*Version: V3.1 (Consolidated)*

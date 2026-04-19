@@ -13,8 +13,6 @@ const v2StatusLabelMap = {
   awaiting_user_info: '待补资料',
   consult_ready_for_assignment: '可转顾问',
   consult_assigned: '顾问已接手',
-  consult_scheduled: '咨询已排期',
-  consult_completed: '咨询已完成',
   follow_up: '会后跟进中',
   nurturing: '培育阶段',
   closed: '已归档'
@@ -28,11 +26,19 @@ const missingInfoLabelMap = {
 };
 
 function isInternalRole(role) {
-  return ['consultant', 'admin', 'super_admin'].includes(role);
+  return ['admin', 'super_admin'].includes(role);
 }
 
 function resolveCurrentV2Status(lead) {
-  return lead?.caseRecord?.status || lead?.adminFollowUpRecord?.status || 'report_viewed';
+  const baseStatus = lead?.caseRecord?.status || lead?.adminFollowUpRecord?.status || 'report_viewed';
+  const consultationSubmitted =
+    lead?.consultationRequest?.requestStatus === 'submitted' || Boolean(lead?.consultationRequest?.submittedAt);
+
+  if (baseStatus === 'report_viewed' && consultationSubmitted) {
+    return 'consult_intent_submitted';
+  }
+
+  return baseStatus;
 }
 
 function statusLabel(status) {
@@ -105,9 +111,12 @@ function buildNextAction(lead) {
       secondaryHref: resultHref
     },
     consult_intent_submitted: {
-      title: '已收到你的意向，管理员正在跟进',
-      primaryLabel: '查看进展',
-      primaryHref: resultHref
+      title: '咨询意向已提交，管理员正在跟进',
+      primaryLabel: '咨询意向已提交',
+      primaryHref: resultHref,
+      primaryDisabled: true,
+      secondaryLabel: '查看报告',
+      secondaryHref: resultHref
     },
     admin_following: {
       title: '管理员正在与你确认信息',
@@ -125,18 +134,8 @@ function buildNextAction(lead) {
       primaryHref: resultHref
     },
     consult_assigned: {
-      title: '顾问已接手，等待排期确认',
-      primaryLabel: '查看咨询安排',
-      primaryHref: resultHref
-    },
-    consult_scheduled: {
-      title: '咨询已排期，请按时参加',
-      primaryLabel: '查看咨询安排',
-      primaryHref: resultHref
-    },
-    consult_completed: {
-      title: '咨询已完成，可查看顾问结论',
-      primaryLabel: '查看顾问结论',
+      title: '顾问已接手，正在准备跟进方案',
+      primaryLabel: '查看顾问接手信息',
       primaryHref: resultHref
     },
     follow_up: {
@@ -279,7 +278,7 @@ function buildTimelineEvents(lead) {
     });
   }
 
-  if (['consult_assigned', 'consult_scheduled', 'consult_completed', 'follow_up', 'closed'].includes(v2Status)) {
+  if (['consult_assigned', 'follow_up', 'closed'].includes(v2Status)) {
     pushTimelineEvent(events, {
       id: 'consultant_assigned',
       title: '顾问分配',
@@ -366,11 +365,6 @@ export default function DashboardPage() {
     if (!authLoading && !user) {
       const next = encodeURIComponent(appPath('/dashboard'));
       router.replace(appPath(`/login?next=${next}`));
-      return;
-    }
-
-    if (!authLoading && user && user.role === 'consultant') {
-      router.replace(appPath('/advisor'));
       return;
     }
 
@@ -500,9 +494,15 @@ export default function DashboardPage() {
               当前案例：{formatStudentName(activeLead)} · 最近更新：{formatDateTime(resolveLeadUpdatedAt(activeLead))}
             </p>
             <div className="hero-actions">
-              <Link className="primary-button" href={nextAction.primaryHref}>
-                {nextAction.primaryLabel}
-              </Link>
+              {nextAction.primaryDisabled ? (
+                <button className="secondary-button is-disabled" type="button" disabled>
+                  {nextAction.primaryLabel}
+                </button>
+              ) : (
+                <Link className="primary-button" href={nextAction.primaryHref}>
+                  {nextAction.primaryLabel}
+                </Link>
+              )}
               {nextAction.secondaryLabel && nextAction.secondaryHref ? (
                 <Link className="secondary-button" href={nextAction.secondaryHref}>
                   {nextAction.secondaryLabel}

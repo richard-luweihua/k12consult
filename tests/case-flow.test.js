@@ -5,7 +5,8 @@ import {
   assertCaseTransitionAllowed,
   assertCaseTransitionRequirements,
   normalizeV2Status,
-  consultantAllowedV2Statuses
+  consultantAllowedV2Statuses,
+  transitionCaseStatus
 } from "../lib/case-flow.js";
 
 test("normalizeV2Status should normalize legacy aliases", () => {
@@ -144,4 +145,44 @@ test("consultant allowed statuses should match doc flow", () => {
   assert.deepEqual([...consultantAllowedV2Statuses].sort(), ["closed", "consult_assigned", "follow_up", "nurturing"].sort());
   assert.equal(consultantAllowedV2Statuses.has("consult_scheduled"), false);
   assert.equal(consultantAllowedV2Statuses.has("consult_completed"), false);
+});
+
+test("transitionCaseStatus should return transition payload for valid transition", () => {
+  const result = transitionCaseStatus({
+    currentStatus: "consult_assigned",
+    nextStatus: "follow_up",
+    payload: {
+      followUpNote: "首次跟进完成"
+    },
+    currentCaseRecord: {}
+  });
+
+  assert.equal(result.changed, true);
+  assert.equal(result.currentStatus, "consult_assigned");
+  assert.equal(result.nextStatus, "follow_up");
+  assert.equal(result.nextLegacyStatus, "跟进中");
+});
+
+test("transitionCaseStatus should require reopenReason for closed to admin_following", () => {
+  assert.throws(
+    () =>
+      transitionCaseStatus({
+        currentStatus: "closed",
+        nextStatus: "admin_following",
+        payload: {},
+        currentCaseRecord: {}
+      }),
+    ValidationError
+  );
+
+  assert.doesNotThrow(() =>
+    transitionCaseStatus({
+      currentStatus: "closed",
+      nextStatus: "admin_following",
+      payload: {
+        reopenReason: "用户重新发起咨询"
+      },
+      currentCaseRecord: {}
+    })
+  );
 });

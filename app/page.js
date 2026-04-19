@@ -8,7 +8,7 @@ import { AttributionLink } from '../components/AttributionLink';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
-  const primaryHref = user ? appPath('/dashboard') : appPath('/questionnaire');
+  const primaryHref = appPath('/questionnaire');
   const loginHref = user ? appPath('/dashboard') : appPath('/login');
 
   if (loading) {

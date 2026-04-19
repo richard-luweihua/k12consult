@@ -19,19 +19,19 @@ export async function POST(request) {
   const consultantId = String(formData.get("consultantId") || "").trim();
 
   if (!hasUserAuthConfig()) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=config", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=config", request), { status: 303 });
   }
 
   if (!hasAdvisorInviteConfig()) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=invite_missing", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=invite_missing", request), { status: 303 });
   }
 
   if (!fullName || !email || !password || !consultantId) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=incomplete", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=incomplete", request), { status: 303 });
   }
 
   if (inviteCode !== getAdvisorInviteCode()) {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=invite", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=invite", request), { status: 303 });
   }
 
   try {
@@ -42,10 +42,10 @@ export async function POST(request) {
       role: "consultant",
       consultantId
     });
-    const response = NextResponse.redirect(absoluteAppUrl("/advisor/workbench", request.url), { status: 303 });
+    const response = NextResponse.redirect(absoluteAppUrl("/advisor/workbench", request), { status: 303 });
     response.cookies.set(USER_SESSION_COOKIE, await createUserSessionToken(user), getUserSessionCookieOptions());
     return response;
   } catch {
-    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=register", request.url), { status: 303 });
+    return NextResponse.redirect(absoluteAppUrl("/advisor/register?error=register", request), { status: 303 });
   }
 }

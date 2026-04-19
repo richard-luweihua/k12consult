@@ -1621,6 +1621,21 @@ button {
   gap: 8px;
 }
 
+.questionnaire-v2 .field-block--missing {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(201, 55, 55, 0.08);
+  border: 1px solid rgba(201, 55, 55, 0.34);
+}
+
+.questionnaire-v2 .required-mark {
+  color: inherit;
+}
+
+.questionnaire-v2 .required-mark--missing {
+  color: #b42318;
+}
+
 .questionnaire-v2 .text-input,
 .questionnaire-v2 .text-area,
 .questionnaire-v2 .select-input {
@@ -1630,8 +1645,20 @@ button {
   padding: 12px 12px;
 }
 
+.questionnaire-v2 .input--missing {
+  border-color: rgba(201, 55, 55, 0.65);
+  box-shadow: 0 0 0 2px rgba(201, 55, 55, 0.12);
+}
+
 .questionnaire-v2 .option-grid {
   gap: 8px;
+}
+
+.questionnaire-v2 .option-grid--missing {
+  padding: 8px;
+  border: 1px dashed rgba(201, 55, 55, 0.5);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .questionnaire-v2 .option-chip {
@@ -1653,6 +1680,53 @@ button {
   gap: 10px;
   justify-items: center;
   padding-top: 6px;
+}
+
+.questionnaire-v2-missing-alert {
+  width: min(720px, 100%);
+  border: 1px solid rgba(201, 55, 55, 0.42);
+  background: rgba(201, 55, 55, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.questionnaire-v2-missing-alert-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #8f1b13;
+}
+
+.questionnaire-v2-missing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.questionnaire-v2-missing-chip {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 27, 19, 0.32);
+  color: #8f1b13;
+  background: rgba(255, 255, 255, 0.88);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.questionnaire-v2 .field-missing-hint {
+  color: #b42318;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.questionnaire-v2-submit .error-text {
+  margin: 0;
+  color: #b42318;
+  font-weight: 600;
+  text-align: center;
 }
 
 .questionnaire-v2-submit-btn {
@@ -1925,6 +1999,15 @@ button {
 .parent-dashboard-shell .secondary-button {
   min-height: 44px;
   border-radius: 8px;
+}
+
+.parent-dashboard-shell .secondary-button.is-disabled,
+.parent-dashboard-shell .secondary-button:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
+  border-color: rgba(82, 96, 87, 0.22);
+  color: #59675e;
 }
 
 .parent-dashboard-header {
