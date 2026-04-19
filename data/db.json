@@ -1211,7 +1211,7 @@
       "id": "6296b9cc-9173-4e2f-9390-603bbead803f",
       "createdAt": "2026-04-17T09:59:01.671Z",
       "created_at": "2026-04-17T09:59:01.671Z",
-      "updatedAt": "2026-04-18T02:38:59.759Z",
+      "updatedAt": "2026-04-18T02:59:18.107Z",
       "updated_at": "2026-04-17T09:59:01.671Z",
       "userId": "mobile-688551",
       "user_id": "mobile-688551",
@@ -1586,7 +1586,7 @@
         "recommendedConsultantId": "consultant-ryan",
         "recommendedConsultantName": "Ryan 林老师",
         "createdAt": "2026-04-17T09:59:01.671Z",
-        "updatedAt": "2026-04-18T02:38:59.759Z",
+        "updatedAt": "2026-04-18T02:59:18.107Z",
         "postConsultation": {
           "summary": "",
           "nextStep": "",
@@ -1601,6 +1601,14 @@
           "reason": "",
           "nextAction": "",
           "updatedAt": "2026-04-18T02:38:59.759Z"
+        },
+        "consultationScheduledAt": "2026-04-18T02:57:00.000Z",
+        "consultationSummary": {
+          "finalPath": "已完成",
+          "riskActions": "",
+          "nextAction": "已完成",
+          "consultantNote": "",
+          "updatedAt": "2026-04-18T02:59:18.107Z"
         }
       },
       "questionnaireResponse": {
