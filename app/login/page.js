@@ -3,18 +3,22 @@
 import { Suspense, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { appPath } from '@/lib/paths';
+import { apiPath, appPath } from '@/lib/paths';
+import { requiredFieldNames } from '@/lib/schema';
 import { isPlaceholderConfig } from '@/lib/supabase';
+
+const QUESTIONNAIRE_DRAFT_KEY = 'k12_questionnaire_draft_v2';
+const QUESTIONNAIRE_PENDING_SUBMIT_KEY = 'k12_questionnaire_pending_submit_v2';
 
 function resolveNextPath(rawNext) {
   if (typeof rawNext !== 'string') {
-    return appPath('/dashboard');
+    return null;
   }
 
   const next = rawNext.trim();
 
   if (!next || !next.startsWith('/') || next.startsWith('//')) {
-    return appPath('/dashboard');
+    return null;
   }
 
   return next;
@@ -39,10 +43,111 @@ function LoginPageContent() {
   const { signIn, signUp, requestMobileOtp, verifyMobileOtp } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = resolveNextPath(searchParams.get('next'));
+  const nextPath = resolveNextPath(searchParams.get('next'));
+  const fallbackPath = appPath('/questionnaire');
+  const redirectPath = nextPath || fallbackPath;
 
   const isDemoMode = isPlaceholderConfig();
   const isOtpVerifyStep = Boolean(otpChallengeId);
+
+  const tryAutoSubmitPendingQuestionnaire = async (authenticatedUser) => {
+    if (typeof window === 'undefined' || !authenticatedUser?.id) {
+      return null;
+    }
+
+    const questionnairePathPrefix = appPath('/questionnaire');
+    if (!nextPath || !nextPath.startsWith(questionnairePathPrefix)) {
+      return null;
+    }
+
+    const raw = window.localStorage.getItem(QUESTIONNAIRE_PENDING_SUBMIT_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    let pending;
+    try {
+      pending = JSON.parse(raw);
+    } catch {
+      window.localStorage.removeItem(QUESTIONNAIRE_PENDING_SUBMIT_KEY);
+      return null;
+    }
+
+    const answers = pending?.answers && typeof pending.answers === 'object' ? pending.answers : null;
+    if (!answers) {
+      window.localStorage.removeItem(QUESTIONNAIRE_PENDING_SUBMIT_KEY);
+      return null;
+    }
+
+    const hasMissing = requiredFieldNames.some((fieldName) => {
+      const value = answers[fieldName];
+      if (Array.isArray(value)) {
+        return value.length === 0;
+      }
+
+      return typeof value === 'string' ? value.trim().length === 0 : !value;
+    });
+
+    if (hasMissing) {
+      return null;
+    }
+
+    const tracking = pending?.tracking && typeof pending.tracking === 'object' ? pending.tracking : {};
+
+    const response = await fetch(apiPath('/api/intake'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        ...answers,
+        userId: authenticatedUser.id,
+        tracking
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || !payload?.submissionId) {
+      throw new Error(payload?.message || '自动提交问卷失败');
+    }
+
+    window.localStorage.removeItem(QUESTIONNAIRE_PENDING_SUBMIT_KEY);
+    window.localStorage.removeItem(QUESTIONNAIRE_DRAFT_KEY);
+    return appPath(`/result/${payload.submissionId}/processing`);
+  };
+
+  const resolvePostLoginPath = async (authenticatedUser) => {
+    try {
+      const autoSubmitPath = await tryAutoSubmitPendingQuestionnaire(authenticatedUser);
+      if (autoSubmitPath) {
+        return autoSubmitPath;
+      }
+    } catch {
+      // 自动提交失败时回退到常规 next 跳转，避免阻塞登录流程
+    }
+
+    if (nextPath) {
+      return nextPath;
+    }
+
+    try {
+      const response = await fetch(apiPath('/api/my-leads'), {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (response.ok && payload.ok !== false) {
+        const leads = Array.isArray(payload.leads) ? payload.leads : [];
+        return leads.length > 0 ? appPath('/dashboard') : fallbackPath;
+      }
+    } catch {
+      // 网络异常时回退到问卷，保证新用户可继续主流程
+    }
+
+    return fallbackPath;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,7 +179,7 @@ function LoginPageContent() {
           return;
         }
 
-        const { error } = await verifyMobileOtp({
+        const { data, error } = await verifyMobileOtp({
           challengeId: otpChallengeId,
           mobile,
           code: otpCode
@@ -84,16 +189,19 @@ function LoginPageContent() {
           throw error;
         }
 
-        router.push(redirectPath);
+        const postLoginPath = await resolvePostLoginPath(data?.user);
+        router.push(postLoginPath);
       } else {
         if (isSignUp) {
-          const { error } = await signUp(email, password, fullName, signUpMobile);
+          const { data, error } = await signUp(email, password, fullName, signUpMobile);
           if (error) throw error;
-          router.push(redirectPath);
+          const postLoginPath = await resolvePostLoginPath(data?.user);
+          router.push(postLoginPath);
         } else {
-          const { error } = await signIn(email, password);
+          const { data, error } = await signIn(email, password);
           if (error) throw error;
-          router.push(redirectPath);
+          const postLoginPath = await resolvePostLoginPath(data?.user);
+          router.push(postLoginPath);
         }
       }
     } catch (error) {

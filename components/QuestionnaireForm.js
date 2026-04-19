@@ -12,6 +12,7 @@ const initialState = formSections.flatMap((section) => section.fields).reduce((a
   return acc;
 }, {});
 const QUESTIONNAIRE_DRAFT_KEY = "k12_questionnaire_draft_v2";
+const QUESTIONNAIRE_PENDING_SUBMIT_KEY = "k12_questionnaire_pending_submit_v2";
 
 function isFilled(value) {
   if (Array.isArray(value)) {
@@ -133,27 +134,6 @@ export function QuestionnaireForm() {
     event.preventDefault();
     setError("");
 
-    if (authLoading) {
-      setMissingFieldNames([]);
-      setError("正在确认登录状态，请稍后再试。");
-      return;
-    }
-
-    if (!user) {
-      setMissingFieldNames([]);
-      setError("请先登录后再提交，我们会保留你已填写的内容。");
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(QUESTIONNAIRE_DRAFT_KEY, JSON.stringify(formData));
-      }
-
-      const nextQuery = new URLSearchParams(searchParams.toString());
-      nextQuery.set("resume", "1");
-      const nextPath = appPath(`/questionnaire?${nextQuery.toString()}`);
-      router.push(appPath(`/login?next=${encodeURIComponent(nextPath)}`));
-      return;
-    }
-
     const missing = requiredFieldNames.filter((fieldName) => !isFilled(formData[fieldName]));
 
     if (missing.length > 0) {
@@ -164,6 +144,44 @@ export function QuestionnaireForm() {
     }
 
     setMissingFieldNames([]);
+
+    if (authLoading) {
+      setError("正在确认登录状态，请稍后再试。");
+      return;
+    }
+
+    if (!user) {
+      setError("请先登录，登录后会自动继续提交并生成报告。");
+
+      if (typeof window !== "undefined") {
+        const tracking = {
+          utmSource: searchParams.get("utm_source") || "",
+          utmMedium: searchParams.get("utm_medium") || "",
+          utmCampaign: searchParams.get("utm_campaign") || "",
+          utmContent: searchParams.get("utm_content") || "",
+          entryPath: window.location.pathname,
+          landingUrl: window.location.href,
+          referrer: document.referrer || ""
+        };
+
+        window.localStorage.setItem(QUESTIONNAIRE_DRAFT_KEY, JSON.stringify(formData));
+        window.localStorage.setItem(
+          QUESTIONNAIRE_PENDING_SUBMIT_KEY,
+          JSON.stringify({
+            answers: formData,
+            tracking,
+            createdAt: new Date().toISOString()
+          })
+        );
+      }
+
+      const nextQuery = new URLSearchParams(searchParams.toString());
+      nextQuery.set("resume", "1");
+      const nextPath = appPath(`/questionnaire?${nextQuery.toString()}`);
+      router.push(appPath(`/login?next=${encodeURIComponent(nextPath)}`));
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -199,6 +217,7 @@ export function QuestionnaireForm() {
 
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(QUESTIONNAIRE_DRAFT_KEY);
+        window.localStorage.removeItem(QUESTIONNAIRE_PENDING_SUBMIT_KEY);
       }
 
       router.push(appPath(`/result/${data.submissionId}/processing`));

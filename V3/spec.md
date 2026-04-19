@@ -516,10 +516,11 @@ npm run verify:login
 
 #### 问卷页 (`/questionnaire`)
 - 标题：`填写信息，生成诊断报告`
-- 5 组字段：身份资格 → 孩子基础 → 目标能力 → 顾虑意向 → 联系方式
+- 4 组字段：身份资格 → 孩子基础 → 目标能力 → 顾虑意向
+- 联系方式统一在报告页“咨询意向提交”模块采集
 - 写入：`students` 基础字段 + `questionnaire_responses.response_json`
 - 交互：分步展示、自动保存草稿、进度显示、未登录可填写
-- 提交时未登录→`/login?next=/questionnaire?resume=1`
+- 提交时未登录→`/login?next=/questionnaire?resume=1`，登录成功后若检测到待提交问卷缓存，自动续提并跳转`/result/{submissionId}/processing`
 - 提交校验：未填必填项需高亮字段，并显示可点击缺失项清单；点击可滚动定位
 - 主按钮：`提交并生成诊断报告`
 
@@ -531,11 +532,11 @@ npm run verify:login
   - §3 目标学校穿透建议（逐校：适配度/卡点/私货/学费）
   - §4 深度风险预警
   - §5 后续行动清单（两阶段）
-  - §6 专家人工介入引导（唯一按钮：`立即预约资深顾问`）
+  - §6 专家人工介入引导（按钮仅用于引导到下方“咨询意向提交”表单，不直接提交）
   - §7 诊断依据声明
 - 正文后：咨询意向提交 + 补资料入口（仅状态允许时显示）
 - 数据契约：建议 `reportView` 结构化 JSON
-- 咨询意向手机号预填优先级：`consultation_request.mobile` > `questionnaire.mobile` > `session.user.mobile`
+- 咨询意向手机号预填优先级：`consultation_request.mobile` > `session.user.mobile`
 
 #### 家长仪表板 (`/dashboard`)
 - **Next Action 主卡**：根据 case.status 动态显示唯一主按钮
@@ -561,6 +562,9 @@ npm run verify:login
 4. 仪表板修复：不再将用户流程误导向顾问工作台。
 5. 咨询意向提交后，Dashboard 主按钮切换为“已提交”禁用态。
 6. 注册手机号同步到会话并用于咨询意向手机号自动带入。
+7. 用户在问卷页未登录点击提交时，登录成功后自动续提问卷并直达报告生成页。
+8. 报告第6章“立即预约资深顾问”仅保留引导作用；真正提交统一在“咨询意向提交”区，且在顾问接手前允许重复更新。
+9. 删除问卷中的“报告解锁通知”模块，联系方式避免前后重复采集。
 
 ### 5.2 顾问端
 
@@ -741,4 +745,4 @@ CREATE TABLE audit_logs (
 ---
 
 *Last Updated: 2026-04-19*
-*Version: V3.1.1 (Consolidated + Hotfix)*
+*Version: V3.1.2 (Consolidated + Hotfix)*

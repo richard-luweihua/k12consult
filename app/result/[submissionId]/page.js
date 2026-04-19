@@ -611,18 +611,8 @@ export default function ResultPage() {
     }
   }
 
-  function handleConsultEntry() {
-    if (!canSubmitIntent) {
-      return;
-    }
-
-    if (intentMobile.trim() || intentWechatId.trim()) {
-      submitConsultationIntent();
-      return;
-    }
-
+  function scrollToConsultationRequest() {
     document.getElementById("consultation-request")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setIntentError("请先填写联系方式后再提交咨询意向。");
   }
 
   function renderChapter(key) {
@@ -780,15 +770,14 @@ export default function ResultPage() {
           <div className="report-v2-consult-line">
             <button
               className="report-v2-consult-btn"
-              disabled={submittingIntent || !canSubmitIntent}
-              onClick={handleConsultEntry}
+              disabled={submittingIntent}
+              onClick={scrollToConsultationRequest}
               type="button"
             >
-              {submittingIntent ? "提交中..." : reportView.consultationGuide.cta_label}
+              {reportView.consultationGuide.cta_label}
             </button>
           </div>
-          {intentError ? <p className="report-v2-error">{intentError}</p> : null}
-          {intentMessage ? <p className="report-v2-success">{intentMessage}</p> : null}
+          <p className="inline-note">点击后将定位到下方“咨询意向提交”表单，由你确认后提交。</p>
         </>
       );
     }
@@ -855,6 +844,7 @@ export default function ResultPage() {
         <section className="report-v2-service-section" id="consultation-request">
           <h2>咨询意向提交</h2>
           <p className="inline-note">咨询意向状态：{consultationStatusLabelMap[consultationStatus] || consultationStatus}</p>
+          <p className="inline-note">顾问接手前可重复提交以更新信息；顾问接手后将锁定。</p>
           {consultationRequest.submittedAt ? (
             <p className="inline-note">最近提交：{formatDateTime(consultationRequest.submittedAt)}</p>
           ) : null}
